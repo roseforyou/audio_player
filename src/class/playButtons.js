@@ -1,4 +1,4 @@
-import { createEl, addZero } from "../method";
+import { createEl } from '../method';
 
 class PlayButtons {
   constructor(prev, play, stop, next) {
@@ -7,35 +7,35 @@ class PlayButtons {
     this.stop = stop;
     this.next = next;
 
-    this.prevDiv = createEl("button");
-    this.prevDiv.innerHTML = "Prev";
-    this.prevDiv.addEventListener("click", () => {
+    this.prevDiv = createEl('button');
+    this.prevDiv.innerHTML = 'Prev';
+    this.prevDiv.addEventListener('click', () => {
       window.PLAYAREA[window.CURRENTPLAYAREA].playList.prev();
     });
 
-    this.playDiv = createEl("button");
-    this.playDiv.innerHTML = "Play";
-    this.playDiv.addEventListener("click", () => {
-      if (this.status === "playing") {
+    this.playDiv = createEl('button');
+    this.playDiv.innerHTML = 'Play';
+    this.playDiv.addEventListener('click', () => {
+      if (this.status === 'playing') {
         window.PLAYAREA[window.CURRENTPLAYAREA].playList.pause();
       } else {
         window.PLAYAREA[window.CURRENTPLAYAREA].playList.play();
       }
     });
 
-    this.stopDiv = createEl("button");
-    this.stopDiv.innerHTML = "Stop";
-    this.stopDiv.addEventListener("click", () => {
+    this.stopDiv = createEl('button');
+    this.stopDiv.innerHTML = 'Stop';
+    this.stopDiv.addEventListener('click', () => {
       window.PLAYAREA[window.CURRENTPLAYAREA].playList.stop();
     });
 
-    this.nextDiv = createEl("button");
-    this.nextDiv.innerHTML = "Next";
-    this.nextDiv.addEventListener("click", () => {
+    this.nextDiv = createEl('button');
+    this.nextDiv.innerHTML = 'Next';
+    this.nextDiv.addEventListener('click', () => {
       window.PLAYAREA[window.CURRENTPLAYAREA].playList.next();
     });
 
-    this.buttonsDiv = createEl("div", ["buttons"]);
+    this.buttonsDiv = createEl('div', ['buttons']);
     this.buttonsDiv.append(
       this.prevDiv,
       this.playDiv,
@@ -43,16 +43,16 @@ class PlayButtons {
       this.nextDiv
     );
 
-    this.status = "";
+    this.status = '';
   }
 
   setPlayTxt() {
-    if (this.status === "playing") {
-      this.playDiv.innerHTML = "Pause";
-      this.playDiv.classList.add("on");
-    } else if (this.status === "pause" || this.status === "stop") {
-      this.playDiv.innerHTML = "Play";
-      this.playDiv.classList.remove("on");
+    if (this.status === 'playing') {
+      this.playDiv.innerHTML = 'Pause';
+      this.playDiv.classList.add('on');
+    } else if (this.status === 'pause' || this.status === 'stop') {
+      this.playDiv.innerHTML = 'Play';
+      this.playDiv.classList.remove('on');
     }
   }
 

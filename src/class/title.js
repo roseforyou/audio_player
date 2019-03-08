@@ -1,27 +1,27 @@
-import { createEl, addZero } from "../method";
+import { createEl, addZero } from '../method';
 
 class Title {
   constructor(name, length) {
-    this.name = name || "";
+    this.name = name || '';
     this.initLen = length || 0;
     this.length = length || 0;
 
-    this.span0 = createEl("span", ["img"]);
-    this.img = createEl("img", ["icon"]);
-    this.img.setAttribute("src", "favicon.png");
+    this.span0 = createEl('span', ['img']);
+    this.img = createEl('img', ['icon']);
+    this.img.setAttribute('src', 'favicon.png');
     this.span0.append(this.img);
-    this.span1 = createEl("span", ["name"]);
-    this.span1.innerHTML = "Welcome to play music!";
-    this.span2 = createEl("span", ["time"]);
-    this.span2.innerHTML = "";
-    this.div = createEl("div", ["title"]);
+    this.span1 = createEl('span', ['name']);
+    this.span1.innerHTML = 'Welcome to play music!';
+    this.span2 = createEl('span', ['time']);
+    this.span2.innerHTML = '';
+    this.div = createEl('div', ['title']);
     this.div.append(this.span0, this.span1, this.span2);
 
     this.si = 0;
   }
 
   formatTime(length) {
-    return "-" + addZero(Math.floor(length / 60)) + ":" + addZero(length % 60);
+    return '-' + addZero(Math.floor(length / 60)) + ':' + addZero(length % 60);
   }
 
   setTime() {
@@ -38,7 +38,7 @@ class Title {
   }
 
   play() {
-    this.span0.classList.add("animate");
+    this.span0.classList.add('animate');
     clearInterval(this.si);
     this.si = setInterval(() => {
       if (this.length === 0) {
@@ -55,11 +55,11 @@ class Title {
 
   pause() {
     clearInterval(this.si);
-    this.span0.classList.remove("animate");
+    this.span0.classList.remove('animate');
   }
 
   stop() {
-    this.span0.classList.remove("animate");
+    this.span0.classList.remove('animate');
     clearInterval(this.si);
     this.length = this.initLen;
   }

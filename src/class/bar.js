@@ -1,53 +1,55 @@
-import { createEl, addZero } from "../method";
+import { createEl } from '../method';
 
 class Bar {
   constructor() {
-    this.div = createEl("div", ["bar"]);
-    this.divInner = createEl("div", ["pb"]);
-    this.div.append(this.divInner);
+    this.el = createEl('div', ['bar']);
+    this.elInner = createEl('div', ['pb']);
+    this.el.append(this.elInner);
 
-    this.si = 0;
+    this.timer = 0;
+    this.interval = 50;
+    this.songCurrentSeconds = 0;
+    this.songTotalSeconds = 0;
   }
 
   getEl() {
-    return this.div;
+    return this.el;
   }
 
-  init() {
-    this.initLength = 0;
-    this.length = 0;
-    this.divInner.style.width = 0;
+  _setElWidth(width) {
+    this.elInner.style.width = width;
   }
 
-  formatLength() {
-    this.divInner.style.width = (100 * this.length) / this.initLen + "%";
+  _formatLength() {
+    this._setElWidth(((100 * this.songCurrentSeconds) / this.songTotalSeconds).toFixed(2) + '%');
   }
 
   setLength(length) {
-    this.length = length;
-    this.initLen = length;
-    this.divInner.style.width = "100%";
+    this.songCurrentSeconds = length;
+    this.songTotalSeconds = length;
+    this.elInner.style.width = '100%';
   }
 
   play() {
-    clearInterval(this.si);
-    this.si = setInterval(() => {
-      if (this.length === 0) {
-        clearInterval(this.si);
+    clearInterval(this.timer);
+    this.timer = setInterval(() => {
+      if (this.songCurrentSeconds <= 0) {
+        clearInterval(this.timer);
         return;
       }
-      this.length = this.length - 0.05;
-      this.formatLength();
-    }, 50);
+      this.songCurrentSeconds = this.songCurrentSeconds - this.interval / 1000;
+      this._formatLength();
+    }, this.interval);
   }
 
   pause() {
-    clearInterval(this.si);
+    clearInterval(this.timer);
   }
 
   stop() {
-    clearInterval(this.si);
-    this.init();
+    clearInterval(this.timer);
+    this.songCurrentSeconds = 0;
+    this._setElWidth(0);
   }
 }
 
