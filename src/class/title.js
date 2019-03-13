@@ -1,10 +1,11 @@
 import { createEl, addZero } from '../method';
 
 class Title {
-  constructor(name, length) {
-    this.name = name || '';
-    this.initLen = length || 0;
-    this.length = length || 0;
+  constructor(player) {
+    Object.assign(this, { player });
+    this.name = '';
+    this.initLen = 0;
+    this.length = 0;
 
     this.span0 = createEl('span', ['img']);
     this.img = createEl('img', ['icon']);
@@ -45,7 +46,7 @@ class Title {
         clearInterval(this.si);
         this.length = this.initLen;
         // playlist next song
-        window.PLAYAREA[window.PLAYAREA.currentPlayarea].playList.next();
+        this.player[this.player.currentPlayarea].playList.next();
         return;
       }
       this.length--;

@@ -145,7 +145,7 @@ class PlayList {
       alert('Please select which you want to delete!');
     } else {
       if (selector('.musiclist>div:not(.hide)').classList.contains('default')) {
-        window.loopAllPlayList(false);
+        window.PLAYAREA.loopAllPlayList(false);
       } else {
         const delSongName = this.songsObjList
           .filter(data => {
@@ -155,7 +155,7 @@ class PlayList {
             return data.name;
           });
         if (confirm(`Are you sure delete [${delSongName.join(',')}]?`)) {
-          window.delSelectedSongs(this, delSongName);
+          window.PLAYAREA.delSelectedSongs(this, delSongName);
         }
       }
     }
