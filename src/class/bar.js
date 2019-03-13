@@ -24,9 +24,9 @@ class Bar {
     this._setElWidth(((100 * this.songCurrentSeconds) / this.songTotalSeconds).toFixed(2) + '%');
   }
 
-  setLength(length) {
-    this.songCurrentSeconds = length;
-    this.songTotalSeconds = length;
+  setLength(seconds) {
+    this.songCurrentSeconds = seconds;
+    this.songTotalSeconds = seconds;
     this.elInner.style.width = '100%';
   }
 

@@ -1,58 +1,55 @@
 import { createEl } from '../method';
+import { STATUS } from '../data';
 
 class PlayButtons {
-  constructor(prev, play, stop, next) {
-    this.prev = prev;
-    this.play = play;
-    this.stop = stop;
-    this.next = next;
+  constructor(playarea) {
+    Object.assign(this, { playarea });
 
-    this.prevDiv = createEl('button');
-    this.prevDiv.innerHTML = 'Prev';
-    this.prevDiv.addEventListener('click', () => {
-      window.PLAYAREA[window.CURRENTPLAYAREA].playList.prev();
-    });
-
-    this.playDiv = createEl('button');
-    this.playDiv.innerHTML = 'Play';
-    this.playDiv.addEventListener('click', () => {
-      if (this.status === 'playing') {
-        window.PLAYAREA[window.CURRENTPLAYAREA].playList.pause();
-      } else {
-        window.PLAYAREA[window.CURRENTPLAYAREA].playList.play();
-      }
-    });
-
-    this.stopDiv = createEl('button');
-    this.stopDiv.innerHTML = 'Stop';
-    this.stopDiv.addEventListener('click', () => {
-      window.PLAYAREA[window.CURRENTPLAYAREA].playList.stop();
-    });
-
-    this.nextDiv = createEl('button');
-    this.nextDiv.innerHTML = 'Next';
-    this.nextDiv.addEventListener('click', () => {
-      window.PLAYAREA[window.CURRENTPLAYAREA].playList.next();
-    });
+    this.prevBtn = this._createBtn('Prev');
+    this.playBtn = this._createBtn('Play');
+    this.stopBtn = this._createBtn('Stop');
+    this.nextBtn = this._createBtn('Next');
 
     this.buttonsDiv = createEl('div', ['buttons']);
     this.buttonsDiv.append(
-      this.prevDiv,
-      this.playDiv,
-      this.stopDiv,
-      this.nextDiv
+      this.prevBtn,
+      this.playBtn,
+      this.stopBtn,
+      this.nextBtn,
     );
 
-    this.status = '';
+    this.status = STATUS.READY;
+  }
+
+  _createBtn(name) {
+    const btn = createEl('button');
+    btn.innerText = name;
+    btn.addEventListener('click', () => {
+      const playList = this.playarea[this.playarea.currentPlayarea].playList;
+      if (name === 'Prev') {
+        playList.prev();
+      } else if (name === 'Play') {
+        if (this.status === STATUS.PLAYING) {
+          playList.pause();
+        } else {
+          playList.play();
+        }
+      } else if (name === 'Stop') {
+        playList.stop();
+      } else if (name === 'Next') {
+        playList.next();
+      }
+    });
+    return btn;
   }
 
   setPlayTxt() {
-    if (this.status === 'playing') {
-      this.playDiv.innerHTML = 'Pause';
-      this.playDiv.classList.add('on');
-    } else if (this.status === 'pause' || this.status === 'stop') {
-      this.playDiv.innerHTML = 'Play';
-      this.playDiv.classList.remove('on');
+    if (this.status === STATUS.PLAYING) {
+      this.playBtn.innerText = 'Pause';
+      this.playBtn.classList.add('on');
+    } else if (this.status === STATUS.PAUSE || this.status === STATUS.STOP) {
+      this.playBtn.innerText = 'Play';
+      this.playBtn.classList.remove('on');
     }
   }
 

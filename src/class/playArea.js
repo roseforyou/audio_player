@@ -2,43 +2,59 @@ import { createEl } from '../method';
 import PlayList from './playList';
 
 class PlayArea {
-  constructor(AUDIOS, isDefault) {
-    this.playAreaDiv = createEl('div');
-    this.btnsDIV = createEl('div', ['buttons', 'listbuttons']);
-    if (isDefault) {
-      this.playAreaDiv.classList.add('default');
-      this.addListBTN = createEl('button');
-      this.addListBTN.innerHTML = 'Add play list';
-      this.addListBTN.addEventListener('click', () => {
-        this.playList.addPlayList();
-      });
-    } else {
-      this.playAreaDiv.classList.add('default' + window.CURRENTIDX);
-    }
-    this.sortBTN = createEl('button');
-    this.sortBTN.innerHTML = 'Sort';
-    this.sortBTN.addEventListener('click', () => {
-      this.playList.sort();
-    });
-    this.randomBTN = createEl('button');
-    this.randomBTN.innerHTML = 'Random';
-    this.randomBTN.addEventListener('click', () => {
-      this.playList.random();
-    });
-    this.deleteBTN = createEl('button');
-    this.deleteBTN.innerHTML = 'Delete';
-    this.deleteBTN.addEventListener('click', () => {
-      this.playList.delete();
-    });
-    if (isDefault) {
-      this.btnsDIV.append(this.addListBTN);
-    }
-    this.btnsDIV.append(this.sortBTN, this.randomBTN, this.deleteBTN);
-    this.playAreaDiv.appendChild(this.btnsDIV);
+  constructor({ AUDIOS, isDefault, index }) {
+    Object.assign(this, { isDefault, index });
 
     this.playList = new PlayList(AUDIOS);
-    this.playAreaDiv.appendChild(this.playList.getEl());
+    this.playAreaDiv = createEl('div');
+    this.btnsArea = createEl('div', ['buttons', 'listbuttons']);
+
+    this._init();
+  }
+
+  _init() {
+    this._playAreaDivRander();
+    this._createBtnsList();
     this.hide();
+  }
+
+  _playAreaDivRander() {
+    if (this.isDefault) {
+      this.playAreaDiv.classList.add('default');
+    } else {
+      this.playAreaDiv.classList.add('default' + this.index);
+    }
+
+    this.playAreaDiv.appendChild(this.btnsArea);
+    this.playAreaDiv.appendChild(this.playList.getEl());
+  }
+
+  _createBtnsList() {
+    if (this.isDefault) {
+      this.addListBTN = this._createBtn('Add play list', () => {
+        this.playList.addPlayList();
+      });
+      this.btnsArea.append(this.addListBTN);
+    }
+
+    this.sortBTN = this._createBtn('Sort', () => {
+      this.playList.sort();
+    });
+    this.randomBTN = this._createBtn('Random', () => {
+      this.playList.random();
+    });
+    this.deleteBTN = this._createBtn('Delete', () => {
+      this.playList.delete();
+    });
+
+    this.btnsArea.append(this.sortBTN, this.randomBTN, this.deleteBTN);
+  }
+
+  _createBtn(name, clkCallBack) {
+    const btn = createEl('button');
+    btn.innerText = name;
+    btn.addEventListener('click', clkCallBack);
+    return btn;
   }
 
   show() {

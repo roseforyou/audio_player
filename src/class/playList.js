@@ -29,7 +29,7 @@ class PlayList {
         return data.id === id;
       })
       .setPlay();
-    window.playSong(id, name, length);
+    window.PLAYAREA.playSong(id, name, length);
   }
 
   moveChildNode(newChildIdx, oldChildIdx) {
@@ -104,8 +104,8 @@ class PlayList {
         .sort((a, b) => {
           return this.sortHandle(
             'desc',
-            a.querySelector('.name').innerHTML.toUpperCase(),
-            b.querySelector('.name').innerHTML.toUpperCase()
+            a.querySelector('.name').innerText.toUpperCase(),
+            b.querySelector('.name').innerText.toUpperCase()
           );
         })
         .map(node => this.ul.appendChild(node));
@@ -125,8 +125,8 @@ class PlayList {
         .sort((a, b) => {
           return this.sortHandle(
             'asc',
-            a.querySelector('.name').innerHTML.toUpperCase(),
-            b.querySelector('.name').innerHTML.toUpperCase()
+            a.querySelector('.name').innerText.toUpperCase(),
+            b.querySelector('.name').innerText.toUpperCase()
           );
         })
         .map(node => this.ul.appendChild(node));
@@ -173,7 +173,7 @@ class PlayList {
     });
     if (pauseSong) {
       pauseSong.setPlay();
-      window.playSong();
+      window.PLAYAREA.playSong();
       return;
     }
 
@@ -184,40 +184,40 @@ class PlayList {
     if (firstCheckedSong) {
       firstCheckedSong.setPlay();
       const { id, name, length } = firstCheckedSong;
-      window.playSong(id, name, length);
+      window.PLAYAREA.playSong(id, name, length);
     } else {
       if (songs.length === 0) return;
       songs[0].setPlay();
       const { id, name, length } = songs[0];
-      window.playSong(id, name, length);
+      window.PLAYAREA.playSong(id, name, length);
     }
   }
 
   play() {
     const currrentPlayAreaName = selector('.musiclist>div:not(.hide)')
       .classList[0];
-    if (currrentPlayAreaName === window.CURRENTPLAYAREA) {
+    if (currrentPlayAreaName === window.PLAYAREA.currentPlayarea) {
       this._play(this.songsObjList);
     } else {
-      // window.CURRENTPLAYAREA under song is all 'stop' or 'ready' will play new switch list song.
-      const findPlayingSongs = window.PLAYAREA[window.CURRENTPLAYAREA].playList.songsObjList.find(data => {
+      // window.PLAYAREA.currentPlayarea under song is all 'stop' or 'ready' will play new switch list song.
+      const findPlayingSongs = window.PLAYAREA[window.PLAYAREA.currentPlayarea].playList.songsObjList.find(data => {
         return data.status === 'playing' || data.status === 'pause';
       });
       if (findPlayingSongs) {
         // if have playing song, play old play area's song.
 
         this._play(
-          window.PLAYAREA[window.CURRENTPLAYAREA].playList.songsObjList
+          window.PLAYAREA[window.PLAYAREA.currentPlayarea].playList.songsObjList
         );
       } else {
         // if not have playing song, play new switch list song.
 
-        window.CURRENTPLAYAREA = selector(
+        window.PLAYAREA.currentPlayarea = selector(
           '.musiclist>div:not(.hide)'
         ).classList[0];
 
         this._play(
-          window.PLAYAREA[window.CURRENTPLAYAREA].playList.songsObjList
+          window.PLAYAREA[window.PLAYAREA.currentPlayarea].playList.songsObjList
         );
       }
     }
@@ -228,7 +228,7 @@ class PlayList {
     });
     if (typeof song === 'undefined') return;
     song.setPause();
-    window.pauseSong();
+    window.PLAYAREA.pauseSong();
   }
   stop() {
     const song = this.songsObjList.find(data => {
@@ -236,7 +236,7 @@ class PlayList {
     });
     if (song) {
       song.setStop();
-      window.stopSong();
+      window.PLAYAREA.stopSong();
     }
   }
   prev() {
@@ -246,7 +246,7 @@ class PlayList {
     let prevIdx = 0;
     if (idx > -1) {
       this.songsObjList[idx].setStop();
-      window.stopSong();
+      window.PLAYAREA.stopSong();
 
       if (idx === 0) {
         prevIdx = this.songsObjList.length - 1;
@@ -260,7 +260,7 @@ class PlayList {
     if (this.songsObjList.length === 0) return;
     this.songsObjList[prevIdx].setPlay();
     const { id, name, length } = this.songsObjList[prevIdx];
-    window.playSong(id, name, length);
+    window.PLAYAREA.playSong(id, name, length);
   }
   next() {
     const idx = this.songsObjList.findIndex(data => {
@@ -269,7 +269,7 @@ class PlayList {
     let nextIdx = 0;
     if (idx > -1) {
       this.songsObjList[idx].setStop();
-      window.stopSong();
+      window.PLAYAREA.stopSong();
 
       if (idx === this.songsObjList.length - 1) {
         nextIdx = 0;
@@ -282,7 +282,7 @@ class PlayList {
     if (this.songsObjList.length === 0) return;
     this.songsObjList[nextIdx].setPlay();
     const { id, name, length } = this.songsObjList[nextIdx];
-    window.playSong(id, name, length);
+    window.PLAYAREA.playSong(id, name, length);
   }
 
   addPlayList() {
@@ -290,20 +290,21 @@ class PlayList {
       return data.selected === true;
     });
     if (songs.length) {
-      const currentPlayAreaCount = ++window.CURRENTIDX;
+      const currentPlayAreaCount = ++window.PLAYAREA.currentIdx;
       const newSongs = songs.map(data => {
         const { id, name, length } = data;
         return { id, name, length };
       });
-      window.PLAYAREA['default' + currentPlayAreaCount] = new PlayArea(
-        newSongs,
-        false
-      );
+      window.PLAYAREA['default' + currentPlayAreaCount] = new PlayArea({
+        AUDIOS: newSongs,
+        isDefault: false,
+        index: currentPlayAreaCount,
+      });
       selector('.musiclist').appendChild(
         window.PLAYAREA['default' + currentPlayAreaCount].getEl()
       );
       const newBtn = createEl('button', ['default' + currentPlayAreaCount]);
-      newBtn.innerHTML = 'New List' + currentPlayAreaCount;
+      newBtn.innerText = 'New List' + currentPlayAreaCount;
 
       const btnDiv = createEl('div');
       btnDiv.setAttribute('draggable', true);
@@ -332,7 +333,7 @@ class PlayList {
           Array.prototype.find.call(
             selectorAll('.playlist .list button'),
             data => {
-              if (data.innerHTML === input.value.trim()) {
+              if (data.innerText === input.value.trim()) {
                 isHasSameName = true;
               }
             }
@@ -341,7 +342,7 @@ class PlayList {
             alert('There is a same name play list!');
             input.value = '';
           } else {
-            newBtn.innerHTML = input.value.trim();
+            newBtn.innerText = input.value.trim();
             input.blur();
             input.value = '';
           }

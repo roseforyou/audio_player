@@ -11,9 +11,9 @@ class Title {
     this.img.setAttribute('src', 'favicon.png');
     this.span0.append(this.img);
     this.span1 = createEl('span', ['name']);
-    this.span1.innerHTML = 'Welcome to play music!';
+    this.span1.innerText = 'Welcome to play music!';
     this.span2 = createEl('span', ['time']);
-    this.span2.innerHTML = '';
+    this.span2.innerText = '';
     this.div = createEl('div', ['title']);
     this.div.append(this.span0, this.span1, this.span2);
 
@@ -25,10 +25,10 @@ class Title {
   }
 
   setTime() {
-    this.span2.innerHTML = this.formatTime(this.length);
+    this.span2.innerText = this.formatTime(this.length);
   }
   setName(name) {
-    this.span1.innerHTML = name;
+    this.span1.innerText = name;
   }
 
   setLength(length) {
@@ -45,7 +45,7 @@ class Title {
         clearInterval(this.si);
         this.length = this.initLen;
         // playlist next song
-        window.PLAYAREA[window.CURRENTPLAYAREA].playList.next();
+        window.PLAYAREA[window.PLAYAREA.currentPlayarea].playList.next();
         return;
       }
       this.length--;

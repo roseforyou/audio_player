@@ -25,7 +25,7 @@ class Song {
     this.span1.appendChild(this.cb);
 
     this.span2 = createEl('span', ['name']);
-    this.span2.innerHTML = this.name;
+    this.span2.innerText = this.name;
     this.span2.addEventListener('click', () => {
       if (this.selected) {
         this.selected = false;
@@ -49,20 +49,20 @@ class Song {
 
       const currrentPlayAreaName = selector('.musiclist>div:not(.hide)')
         .classList[0];
-      if (currrentPlayAreaName === window.CURRENTPLAYAREA) return;
-      const s = window.PLAYAREA[window.CURRENTPLAYAREA].playList.songsObjList.find(data => {
+      if (currrentPlayAreaName === window.PLAYAREA.currentPlayarea) return;
+      const s = window.PLAYAREA[window.PLAYAREA.currentPlayarea].playList.songsObjList.find(data => {
         return data.status === 'playing' || data.status === 'pause';
       });
       if (s) {
         s.setStop();
       }
-      window.CURRENTPLAYAREA = selector(
+      window.PLAYAREA.currentPlayarea = selector(
         '.musiclist>div:not(.hide)'
       ).classList[0];
     });
 
     this.span3 = createEl('span', ['time']);
-    this.span3.innerHTML = this.formatTime(this.length);
+    this.span3.innerText = this.formatTime(this.length);
 
     this.li.appendChild(this.span1);
     this.li.appendChild(this.span2);

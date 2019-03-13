@@ -1,25 +1,51 @@
 import { selector, selectorAll } from './method';
-import AUDIOS from './data';
+import { AUDIOS } from './data';
 import Title from './class/title';
 import Bar from './class/bar';
 import PlayButtons from './class/playButtons';
 import PlayArea from './class/playArea';
+
+window.PLAYAREA = {
+  currentPlayarea: 'default',
+  currentIdx: 0,
+  playButtons: {},
+  playSong: (id, name, length) => {
+    if (name) window.PLAYAREA.title.setName(name);
+    if (length) window.PLAYAREA.title.setLength(length);
+    window.PLAYAREA.title.play();
+    if (length) window.PLAYAREA.bar.setLength(length);
+    window.PLAYAREA.bar.play();
+    window.PLAYAREA.playButtons.setPlayStatus('playing');
+  },
+  title: new Title(),
+  bar: new Bar(),
+  stopSong: () => {
+    window.PLAYAREA.title.setLength(0);
+    window.PLAYAREA.title.stop();
+
+    window.PLAYAREA.bar.stop();
+    window.PLAYAREA.playButtons.setPlayStatus('stop');
+  },
+  pauseSong: () => {
+    window.PLAYAREA.title.pause();
+    window.PLAYAREA.bar.pause();
+    window.PLAYAREA.playButtons.setPlayStatus('pause');
+  }
+};
 
 AUDIOS.forEach(data => {
   Object.assign((data.length = Math.round(Math.random() * 6 * 10 + 10)), data);
 });
 
 // operate buttons [prev, play/pause, stop, next]
-const playButtons = new PlayButtons();
-selector('.container').prepend(playButtons.getEl());
+window.PLAYAREA.playButtons = new PlayButtons(window.PLAYAREA);
+selector('.container').prepend(window.PLAYAREA.playButtons.getEl());
 
 // music bar
-const bar = new Bar();
-selector('.container').prepend(bar.getEl());
+selector('.container').prepend(window.PLAYAREA.bar.getEl());
 
 // song title, time show area
-const title = new Title();
-selector('.container').prepend(title.getEl());
+selector('.container').prepend(window.PLAYAREA.title.getEl());
 
 // song play list button event, and switch play area
 selector('.playlist .list').addEventListener('click', e => {
@@ -53,7 +79,7 @@ selector('.playlist .op').addEventListener('click', e => {
   if (currentEl.nodeName === 'BUTTON') {
     if (confirm('Are you sure delete current play list?!')) {
       selector('.musiclist >div:not(.hide)').remove();
-      window.CURRENTPLAYAREA = 'default';
+      window.PLAYAREA.currentPlayarea = 'default';
       const btn = selector('.playlist .list button.on');
       window.PLAYAREA[btn.classList[0]].playList.stop();
       delete window.PLAYAREA[btn.classList[0]];
@@ -69,13 +95,13 @@ window.delSelectedSongs = (list, delArr) => {
       (data.status === 'playing' || data.status === 'pause') &&
       new Set(delArr).has(data.name)
     ) {
-      window.stopSong();
+      window.PLAYAREA.stopSong();
       data.setStop();
     }
   });
 
   list.ul.querySelectorAll('li').forEach(data => {
-    if (delArr.includes(data.querySelector('.name').innerHTML)) {
+    if (delArr.includes(data.querySelector('.name').innerText)) {
       data.remove();
     }
   });
@@ -100,11 +126,13 @@ window.loopAllPlayList = isDelete => {
 
   if (isDelete) {
     for (const key of Object.keys(window.PLAYAREA)) {
-      window.delSelectedSongs(window.PLAYAREA[key].playList, delSongName);
+      if (key.indexOf('default') > -1) {
+        window.delSelectedSongs(window.PLAYAREA[key].playList, delSongName);
+      }
     }
   } else {
     for (const key of Object.keys(window.PLAYAREA)) {
-      if (key !== 'default') {
+      if (key.indexOf('default') > -1 && key.length > 'default'.length) {
         if (
           window.PLAYAREA[key].playList.songsObjList.find(data => {
             if (delSongName.includes(data.name)) {
@@ -119,7 +147,7 @@ window.loopAllPlayList = isDelete => {
     let msg = `Are you sure delete [${delSongName.join(', ')}]?`;
     if (containedListName.length) {
       containedListName = containedListName.map(data => {
-        return selector('.playlist .' + data).innerHTML;
+        return selector('.playlist .' + data).innerText;
       });
       msg += `\nPlay List: [${containedListName.join(
         ', '
@@ -132,35 +160,7 @@ window.loopAllPlayList = isDelete => {
   }
 };
 
-window.CURRENTPLAYAREA = 'default';
-window.CURRENTIDX = 0;
-window.PLAYAREA = {};
-window.playSong = (id, name, length) => {
-  if (name) title.setName(name);
-  if (length) title.setLength(length);
-  title.play();
-
-  if (length) bar.setLength(length);
-  bar.play();
-
-  playButtons.setPlayStatus('playing');
-};
-
-window.stopSong = () => {
-  title.setLength(0);
-  title.stop();
-
-  bar.stop();
-  playButtons.setPlayStatus('stop');
-};
-
-window.pauseSong = () => {
-  title.pause();
-  bar.pause();
-  playButtons.setPlayStatus('pause');
-};
-
-window.PLAYAREA['default'] = new PlayArea(AUDIOS, true);
+window.PLAYAREA['default'] = new PlayArea({ AUDIOS, isDefault: true });
 selector('.musiclist').appendChild(window.PLAYAREA.default.getEl());
 window.PLAYAREA.default.playList.random();
 window.PLAYAREA.default.show();
@@ -172,9 +172,9 @@ window.onkeyup = e => {
     selectorAll('.container>.buttons button')[1].click();
   }
   if (key === 38) {
-    window.PLAYAREA[window.CURRENTPLAYAREA].playList.prev();
+    window.PLAYAREA[window.PLAYAREA.currentPlayarea].playList.prev();
   }
   if (key === 40) {
-    window.PLAYAREA[window.CURRENTPLAYAREA].playList.next();
+    window.PLAYAREA[window.PLAYAREA.currentPlayarea].playList.next();
   }
 };

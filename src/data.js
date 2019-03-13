@@ -1,4 +1,4 @@
-const AUDIOS = [
+export const AUDIOS = [
   { id: 1, name: 'Beautiful' },
   { id: 2, name: 'I Like It' },
   { id: 3, name: 'Jingle Bell Rock' },
@@ -20,4 +20,10 @@ const AUDIOS = [
   { id: 19, name: 'Kelly Clarkson' },
   { id: 20, name: 'I Need (Wilkinson & Metrik Remix)' },
 ];
-export default AUDIOS;
+
+export const STATUS = {
+  PLAYING: 'playing',
+  PAUSE: 'pause',
+  STOP: 'stop',
+  READY: 'ready',
+};
