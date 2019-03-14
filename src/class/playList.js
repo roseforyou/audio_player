@@ -3,33 +3,33 @@ import Song from './song';
 import PlayArea from './playArea';
 
 class PlayList {
-  constructor(songsList) {
-    const sl = JSON.parse(JSON.stringify(songsList));
-    Object.assign(this, { sl });
+  constructor(player, songsList) {
+    // const sl = JSON.parse(JSON.stringify(songsList));
+    const sl = [...songsList];
+    Object.assign(this, { sl, player });
 
     this.ul = createEl('ul');
+    this._createSongsList();
+  }
 
-    this.songsObjList = this.sl.map(data => {
-      const s = new Song(data.id, data.name, data.length, this);
-      this.ul.appendChild(s.getEl());
-      return s;
+  _createSongsList() {
+    this.songsObjList = this.sl.map(({ id, name, length }) => {
+      const song = new Song(id, name, length, this, this.player);
+      this.ul.appendChild(song.getEl());
+      return song;
     });
   }
 
   playSong(id, name, length) {
-    const s = this.songsObjList.find(data => {
-      return data.status === 'playing';
-    });
+    const s = this.songsObjList.find(data => data.status === 'playing');
     if (s) {
       s.setStop();
     }
 
     this.songsObjList
-      .find(data => {
-        return data.id === id;
-      })
+      .find(data => data.id === id)
       .setPlay();
-    window.PLAYAREA.playSong(id, name, length);
+    this.player.playSong(id, name, length);
   }
 
   moveChildNode(newChildIdx, oldChildIdx) {
@@ -37,6 +37,7 @@ class PlayList {
       this.ul.childNodes[newChildIdx],
       this.ul.childNodes[oldChildIdx]
     );
+    // only for two nodes of params position switch, other nodes position not change.
     if (newChildIdx === this.songsObjList.length - 1) {
       this.ul.appendChild(this.ul.childNodes[oldChildIdx + 1]);
     } else {
@@ -86,50 +87,33 @@ class PlayList {
         return 1;
       }
     }
-
     return 0;
   }
 
+  // sortHandle(isAsc, nameA, nameB) {
+  //   return isAsc ? nameA - nameB : nameB - nameA;
+  // }
+
+  // sortHandle(isAsc, nameA, nameB) {
+  //   return isAsc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+  // }
+
   sort() {
     if (this.ul.classList.contains('asc')) {
-      this.songsObjList.sort((a, b) => {
-        return this.sortHandle(
-          'desc',
-          a.name.toUpperCase(),
-          b.name.toUpperCase()
-        );
-      });
+      this.songsObjList.sort((a, b) => this.sortHandle('desc', a.name.toUpperCase(), b.name.toUpperCase()));
 
       [...this.ul.childNodes]
-        .sort((a, b) => {
-          return this.sortHandle(
-            'desc',
-            a.querySelector('.name').innerText.toUpperCase(),
-            b.querySelector('.name').innerText.toUpperCase()
-          );
-        })
-        .map(node => this.ul.appendChild(node));
+        .sort((a, b) => this.sortHandle('desc', a.querySelector('.name').innerText.toUpperCase(), b.querySelector('.name').innerText.toUpperCase()))
+        .forEach(node => this.ul.appendChild(node));
 
       this.ul.classList.remove('asc');
       this.ul.classList.add('desc');
     } else {
-      this.songsObjList.sort((a, b) => {
-        return this.sortHandle(
-          'asc',
-          a.name.toUpperCase(),
-          b.name.toUpperCase()
-        );
-      });
+      this.songsObjList.sort((a, b) => this.sortHandle('asc', a.name.toUpperCase(), b.name.toUpperCase()));
 
       [...this.ul.childNodes]
-        .sort((a, b) => {
-          return this.sortHandle(
-            'asc',
-            a.querySelector('.name').innerText.toUpperCase(),
-            b.querySelector('.name').innerText.toUpperCase()
-          );
-        })
-        .map(node => this.ul.appendChild(node));
+        .sort((a, b) => this.sortHandle('asc', a.querySelector('.name').innerText.toUpperCase(), b.querySelector('.name').innerText.toUpperCase()))
+        .forEach(node => this.ul.appendChild(node));
 
       this.ul.classList.remove('desc');
       this.ul.classList.add('asc');
@@ -137,116 +121,94 @@ class PlayList {
   }
 
   delete() {
-    if (
-      typeof this.songsObjList.find(data => {
-        return data.selected === true;
-      }) === 'undefined'
-    ) {
+    if (!this.songsObjList.find(data => data.selected === true)) {
       alert('Please select which you want to delete!');
     } else {
       if (selector('.musiclist>div:not(.hide)').classList.contains('default')) {
-        window.PLAYAREA.loopAllPlayList(false);
+        this.player.loopAllPlayList(false);
       } else {
         const delSongName = this.songsObjList
-          .filter(data => {
-            return data.selected === true;
-          })
-          .map(data => {
-            return data.name;
-          });
+          .filter(data => data.selected === true)
+          .map(data => data.name);
         if (confirm(`Are you sure delete [${delSongName.join(',')}]?`)) {
-          window.PLAYAREA.delSelectedSongs(this, delSongName);
+          this.player.delSelectedSongs(this, delSongName);
         }
       }
     }
   }
 
   _play(songs) {
-    if (
-      songs.find(data => {
-        return data.status === 'playing';
-      })
-    ) { return; }
-
-    const pauseSong = songs.find(data => {
-      return data.status === 'pause';
-    });
-    if (pauseSong) {
-      pauseSong.setPlay();
-      window.PLAYAREA.playSong();
+    if (songs.find(data => data.status === 'playing')) {
       return;
     }
 
-    const firstCheckedSong = songs.find(data => {
-      return data.selected === true;
-    });
+    const pauseSong = songs.find(data => data.status === 'pause');
+    if (pauseSong) {
+      pauseSong.setPlay();
+      this.player.playSong();
+      return;
+    }
+
+    const firstCheckedSong = songs.find(data => data.selected === true);
 
     if (firstCheckedSong) {
       firstCheckedSong.setPlay();
       const { id, name, length } = firstCheckedSong;
-      window.PLAYAREA.playSong(id, name, length);
+      this.player.playSong(id, name, length);
     } else {
       if (songs.length === 0) return;
       songs[0].setPlay();
       const { id, name, length } = songs[0];
-      window.PLAYAREA.playSong(id, name, length);
+      this.player.playSong(id, name, length);
     }
   }
 
   play() {
     const currrentPlayAreaName = selector('.musiclist>div:not(.hide)')
       .classList[0];
-    if (currrentPlayAreaName === window.PLAYAREA.currentPlayarea) {
+    if (currrentPlayAreaName === this.player.currentPlayarea) {
       this._play(this.songsObjList);
     } else {
-      // window.PLAYAREA.currentPlayarea under song is all 'stop' or 'ready' will play new switch list song.
-      const findPlayingSongs = window.PLAYAREA[window.PLAYAREA.currentPlayarea].playList.songsObjList.find(data => {
-        return data.status === 'playing' || data.status === 'pause';
-      });
+      // this.player.currentPlayarea under song is all 'stop' or 'ready' will play new switch list song.
+      const findPlayingSongs = this.player[this.player.currentPlayarea].playList.songsObjList.find(data => data.status === 'playing' || data.status === 'pause');
       if (findPlayingSongs) {
         // if have playing song, play old play area's song.
 
         this._play(
-          window.PLAYAREA[window.PLAYAREA.currentPlayarea].playList.songsObjList
+          this.player[this.player.currentPlayarea].playList.songsObjList
         );
       } else {
         // if not have playing song, play new switch list song.
 
-        window.PLAYAREA.currentPlayarea = selector(
+        this.player.currentPlayarea = selector(
           '.musiclist>div:not(.hide)'
         ).classList[0];
 
         this._play(
-          window.PLAYAREA[window.PLAYAREA.currentPlayarea].playList.songsObjList
+          this.player[this.player.currentPlayarea].playList.songsObjList
         );
       }
     }
   }
   pause() {
-    const song = this.songsObjList.find(data => {
-      return data.status === 'playing';
-    });
+    const song = this.songsObjList.find(data => data.status === 'playing');
     if (typeof song === 'undefined') return;
     song.setPause();
-    window.PLAYAREA.pauseSong();
+    this.player.pauseSong();
   }
   stop() {
-    const song = this.songsObjList.find(data => {
-      return data.status === 'playing' || data.status === 'pause';
-    });
+    const song = this.songsObjList.find(data => data.status === 'playing' || data.status === 'pause');
     if (song) {
       song.setStop();
-      window.PLAYAREA.stopSong();
+      this.player.stopSong();
     }
   }
   prev() {
-    const idx = this.songsObjList.findIndex(data => {
-      return data.status === 'playing' || data.status === 'pause';
-    });
+    const idx = this.songsObjList.findIndex(data => data.status === 'playing' || data.status === 'pause');
     let prevIdx = 0;
     if (idx > -1) {
       this.songsObjList[idx].setStop();
-      window.PLAYAREA.stopSong();
+      this.player.stopSong();
 
       if (idx === 0) {
         prevIdx = this.songsObjList.length - 1;
@@ -260,16 +222,14 @@ class PlayList {
     if (this.songsObjList.length === 0) return;
     this.songsObjList[prevIdx].setPlay();
     const { id, name, length } = this.songsObjList[prevIdx];
-    window.PLAYAREA.playSong(id, name, length);
+    this.player.playSong(id, name, length);
   }
   next() {
-    const idx = this.songsObjList.findIndex(data => {
-      return data.status === 'playing' || data.status === 'pause';
-    });
+    const idx = this.songsObjList.findIndex(data => data.status === 'playing' || data.status === 'pause');
     let nextIdx = 0;
     if (idx > -1) {
       this.songsObjList[idx].setStop();
-      window.PLAYAREA.stopSong();
+      this.player.stopSong();
 
       if (idx === this.songsObjList.length - 1) {
         nextIdx = 0;
@@ -282,26 +242,25 @@ class PlayList {
     if (this.songsObjList.length === 0) return;
     this.songsObjList[nextIdx].setPlay();
     const { id, name, length } = this.songsObjList[nextIdx];
-    window.PLAYAREA.playSong(id, name, length);
+    this.player.playSong(id, name, length);
   }
 
   addPlayList() {
-    const songs = this.songsObjList.filter(data => {
-      return data.selected === true;
-    });
+    const songs = this.songsObjList.filter(data => data.selected === true);
     if (songs.length) {
-      const currentPlayAreaCount = ++window.PLAYAREA.currentIdx;
+      const currentPlayAreaCount = ++this.player.currentIdx;
       const newSongs = songs.map(data => {
         const { id, name, length } = data;
         return { id, name, length };
       });
-      window.PLAYAREA['default' + currentPlayAreaCount] = new PlayArea({
+      this.player['default' + currentPlayAreaCount] = new PlayArea({
+        player: this.player,
         AUDIOS: newSongs,
         isDefault: false,
         index: currentPlayAreaCount,
       });
       selector('.musiclist').appendChild(
-        window.PLAYAREA['default' + currentPlayAreaCount].getEl()
+        this.player['default' + currentPlayAreaCount].getEl()
       );
       const newBtn = createEl('button', ['default' + currentPlayAreaCount]);
       newBtn.innerText = 'New List' + currentPlayAreaCount;
@@ -421,12 +380,7 @@ class PlayList {
     return selectorAll('.playlist .list>div')[idx];
   }
   getDragIdx(attr) {
-    return Array.prototype.findIndex.call(
-      selectorAll('.playlist .list>div'),
-      data => {
-        return data.getAttribute(attr);
-      }
-    );
+    return Array.prototype.findIndex.call(selectorAll('.playlist .list>div'), data => data.getAttribute(attr));
   }
   swapNodes(a, b) {
     const aparent = a.parentNode;

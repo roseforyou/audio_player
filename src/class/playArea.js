@@ -2,10 +2,10 @@ import { createEl } from '../method';
 import PlayList from './playList';
 
 class PlayArea {
-  constructor({ AUDIOS, isDefault, index }) {
+  constructor({ player, AUDIOS, isDefault, index }) {
     Object.assign(this, { isDefault, index });
 
-    this.playList = new PlayList(AUDIOS);
+    this.playList = new PlayList(player, AUDIOS);
     this.playAreaDiv = createEl('div');
     this.btnsArea = createEl('div', ['buttons', 'listbuttons']);
 

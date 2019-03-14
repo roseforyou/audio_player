@@ -1,8 +1,8 @@
 import { createEl, addZero, selector } from '../method';
 
 class Song {
-  constructor(id, name, length, playListObj) {
-    Object.assign(this, { id, name, length, playListObj });
+  constructor(id, name, length, playListObj, player) {
+    Object.assign(this, { id, name, length, playListObj, player });
 
     this.selected = false;
 
@@ -49,14 +49,12 @@ class Song {
 
       const currrentPlayAreaName = selector('.musiclist>div:not(.hide)')
         .classList[0];
-      if (currrentPlayAreaName === window.PLAYAREA.currentPlayarea) return;
-      const s = window.PLAYAREA[window.PLAYAREA.currentPlayarea].playList.songsObjList.find(data => {
-        return data.status === 'playing' || data.status === 'pause';
-      });
+      if (currrentPlayAreaName === this.player.currentPlayarea) return;
+      const s = this.player[this.player.currentPlayarea].playList.songsObjList.find(data => data.status === 'playing' || data.status === 'pause');
       if (s) {
         s.setStop();
       }
-      window.PLAYAREA.currentPlayarea = selector(
+      this.player.currentPlayarea = selector(
         '.musiclist>div:not(.hide)'
       ).classList[0];
     });
@@ -115,7 +113,7 @@ class Song {
     const handleDragEnd = () => {
       this.clearDragClass('over');
       const songs =
-        window.PLAYAREA[selector('.playlist .list button.on').classList[0]]
+        this.player[selector('.playlist .list button.on').classList[0]]
           .playList.songsObjList;
       songs.find(data => {
         if (data.hasOwnProperty('dragTo')) delete data.dragTo;
@@ -132,25 +130,23 @@ class Song {
     this.li.addEventListener('dragend', handleDragEnd, false);
   }
   clearDragClass(cls) {
-    window.PLAYAREA[selector('.playlist .list button.on').classList[0]].playList.ul
+    this.player[selector('.playlist .list button.on').classList[0]].playList.ul
       .querySelectorAll('li')
       .forEach(data => data.classList.remove(cls));
   }
   getDragLi(idx) {
-    return window.PLAYAREA[selector('.playlist .list button.on').classList[0]].playList.ul.querySelectorAll('li')[idx];
+    return this.player[selector('.playlist .list button.on').classList[0]].playList.ul.querySelectorAll('li')[idx];
   }
   getDragIdx(prop) {
-    return window.PLAYAREA[selector('.playlist .list button.on').classList[0]].playList.songsObjList.findIndex(data => {
-      return data[prop] === true;
-    });
+    return this.player[selector('.playlist .list button.on').classList[0]].playList.songsObjList.findIndex(data => data[prop] === true);
   }
   swapArrayItem(a, b) {
     const x =
-      window.PLAYAREA[selector('.playlist .list button.on').classList[0]]
+      this.player[selector('.playlist .list button.on').classList[0]]
         .playList.songsObjList[b];
-    window.PLAYAREA[selector('.playlist .list button.on').classList[0]].playList.songsObjList[b] =
-      window.PLAYAREA[selector('.playlist .list button.on').classList[0]].playList.songsObjList[a];
-    window.PLAYAREA[selector('.playlist .list button.on').classList[0]].playList.songsObjList[a] = x;
+    this.player[selector('.playlist .list button.on').classList[0]].playList.songsObjList[b] =
+      this.player[selector('.playlist .list button.on').classList[0]].playList.songsObjList[a];
+    this.player[selector('.playlist .list button.on').classList[0]].playList.songsObjList[a] = x;
   }
   swapNodes(a, b) {
     const aparent = a.parentNode;

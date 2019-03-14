@@ -13,19 +13,22 @@ class Player {
 
     this.currentPlayarea = 'default';
     this.currentIdx = 0;
+    this.container = selector('.container');
+  }
+
+  init() {
     this.playButtons = new PlayButtons(this);
     this.title = new Title(this);
     this.bar = new Bar();
-    this.container = selector('.container');
 
     this.container.prepend(this.playButtons.getEl());
     this.container.prepend(this.bar.getEl());
     this.container.prepend(this.title.getEl());
 
-    this['default'] = new PlayArea({ AUDIOS, isDefault: true });
-    selector('.musiclist').appendChild(this.default.getEl());
-    this.default.playList.random();
-    this.default.show();
+    this[this.currentPlayarea] = new PlayArea({ player: this, AUDIOS, isDefault: true });
+    selector('.musiclist').appendChild(this[this.currentPlayarea].getEl());
+    this[this.currentPlayarea].playList.random();
+    this[this.currentPlayarea].show();
     this.container.style.display = 'block';
 
     selector('.playlist .list').addEventListener('click', e => {
@@ -132,9 +135,7 @@ class Player {
     });
 
     list.songsObjList
-      .filter(data => {
-        return delArr.includes(data.name);
-      })
+      .filter(data => delArr.includes(data.name))
       .forEach(data => {
         list.songsObjList.splice(list.songsObjList.indexOf(data), 1);
       });
@@ -142,12 +143,8 @@ class Player {
 
   loopAllPlayList(isDelete) {
     const delSongName = this['default'].playList.songsObjList
-      .filter(data => {
-        return data.selected === true;
-      })
-      .map(data => {
-        return data.name;
-      });
+      .filter(data => data.selected === true)
+      .map(data => data.name);
     let containedListName = [];
 
     if (isDelete) {
@@ -172,9 +169,7 @@ class Player {
       }
       let msg = `Are you sure delete [${delSongName.join(', ')}]?`;
       if (containedListName.length) {
-        containedListName = containedListName.map(data => {
-          return selector('.playlist .' + data).innerText;
-        });
+        containedListName = containedListName.map(data => selector('.playlist .' + data).innerText);
         msg += `\nPlay List: [${containedListName.join(
           ', '
         )}] also contains, will deleted!`;
@@ -186,6 +181,5 @@ class Player {
     }
   }
 }
-
 const player = new Player();
-window.PLAYAREA = player;
+player.init();
