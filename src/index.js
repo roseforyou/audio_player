@@ -1,5 +1,5 @@
 import { selector, selectorAll } from './method';
-import { AUDIOS } from './data';
+import { AUDIOS, EVENT } from './data';
 import Title from './class/title';
 import Bar from './class/bar';
 import PlayButtons from './class/playButtons';
@@ -75,13 +75,13 @@ class Player {
 
     window.onkeyup = e => {
       const key = e.which || e.keyCode;
-      if (key === 32) {
+      if (key === EVENT.Space) {
         selectorAll('.container>.buttons button')[1].click();
       }
-      if (key === 38) {
+      if (key === EVENT.ArrowUp) {
         this[this.currentPlayarea].playList.prev();
       }
-      if (key === 40) {
+      if (key === EVENT.ArrowDown) {
         this[this.currentPlayarea].playList.next();
       }
     };
@@ -181,5 +181,4 @@ class Player {
     }
   }
 }
-const player = new Player();
-player.init();
+new Player().init();

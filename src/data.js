@@ -27,3 +27,11 @@ export const STATUS = {
   STOP: 'stop',
   READY: 'ready',
 };
+
+export const EVENT = {
+  Enter: 13,
+  ArrowUp: 38,
+  ArrowDown: 40,
+  Space: 32,
+};
+

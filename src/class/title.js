@@ -42,7 +42,7 @@ class Title {
     this.span0.classList.add('animate');
     clearInterval(this.si);
     this.si = setInterval(() => {
-      if (this.length === 0) {
+      if (!this.length) {
         clearInterval(this.si);
         this.length = this.initLen;
         // playlist next song

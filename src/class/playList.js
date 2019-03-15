@@ -1,14 +1,15 @@
-import { createEl, selector, selectorAll } from '../method';
+import { createEl, selector, swapNodes } from '../method';
+import PlayListBtns from './playListBtns';
 import Song from './song';
-import PlayArea from './playArea';
 
 class PlayList {
   constructor(player, songsList) {
+    // old
     // const sl = JSON.parse(JSON.stringify(songsList));
+    // use ES6
     const sl = [...songsList];
-    Object.assign(this, { sl, player });
+    Object.assign(this, { sl, player, ul: createEl('ul'), songsObjList: [] });
 
-    this.ul = createEl('ul');
     this._createSongsList();
   }
 
@@ -32,21 +33,22 @@ class PlayList {
     this.player.playSong(id, name, length);
   }
 
-  moveChildNode(newChildIdx, oldChildIdx) {
-    this.ul.insertBefore(
-      this.ul.childNodes[newChildIdx],
-      this.ul.childNodes[oldChildIdx]
-    );
-    // only for two nodes of params position switch, other nodes position not change.
-    if (newChildIdx === this.songsObjList.length - 1) {
-      this.ul.appendChild(this.ul.childNodes[oldChildIdx + 1]);
-    } else {
-      this.ul.insertBefore(
-        this.ul.childNodes[oldChildIdx + 1],
-        this.ul.childNodes[newChildIdx + 1]
-      );
-    }
-  }
+  // moveChildNode(newChildIdx, oldChildIdx) {
+  //   const ul = this.ul;
+  //   ul.insertBefore(
+  //     ul.childNodes[newChildIdx],
+  //     ul.childNodes[oldChildIdx]
+  //   );
+  //   // only for two nodes of params position switch, other nodes position not change.
+  //   if (newChildIdx === this.songsObjList.length - 1) {
+  //     ul.appendChild(ul.childNodes[oldChildIdx + 1]);
+  //   } else {
+  //     ul.insertBefore(
+  //       ul.childNodes[oldChildIdx + 1],
+  //       ul.childNodes[newChildIdx + 1]
+  //     );
+  //   }
+  // }
 
   random() {
     this.ul.classList.remove('asc');
@@ -63,56 +65,53 @@ class PlayList {
       // this.ul.replaceChild(ctempj, this.ul.childNodes[i]);
       // this.ul.replaceChild(ctempi, this.ul.childNodes[j]);
 
-      if (i < j) {
-        this.moveChildNode(j, i);
-      } else if (i > j) {
-        this.moveChildNode(i, j);
-      }
+      // if (i < j) {
+      //   this.moveChildNode(j, i);
+      // } else if (i > j) {
+      //   this.moveChildNode(i, j);
+      // }
+      if (i !== j) swapNodes(this.ul.childNodes[i], this.ul.childNodes[j]);
     }
   }
 
-  sortHandle(sort, nameA, nameB) {
-    if (sort === 'asc') {
-      if (nameA < nameB) {
-        return -1;
-      }
-      if (nameA > nameB) {
-        return 1;
-      }
-    } else {
-      if (nameA > nameB) {
-        return -1;
-      }
-      if (nameA < nameB) {
-        return 1;
-      }
-    }
-    return 0;
+  // sortHandle(sort, nameA, nameB) {
+  //   if (sort === 'asc') {
+  //     if (nameA < nameB) {
+  //       return -1;
+  //     }
+  //     if (nameA > nameB) {
+  //       return 1;
+  //     }
+  //   } else {
+  //     if (nameA > nameB) {
+  //       return -1;
+  //     }
+  //     if (nameA < nameB) {
+  //       return 1;
+  //     }
+  //   }
+  //   return 0;
+  // }
+
+  sortHandle(isAsc, nameA, nameB) {
+    return isAsc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
   }
-
-  // sortHandle(isAsc, nameA, nameB) {
-  //   return isAsc ? nameA - nameB : nameB - nameA;
-  // }
-
-  // sortHandle(isAsc, nameA, nameB) {
-  //   return isAsc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
-  // }
 
   sort() {
     if (this.ul.classList.contains('asc')) {
-      this.songsObjList.sort((a, b) => this.sortHandle('desc', a.name.toUpperCase(), b.name.toUpperCase()));
+      this.songsObjList.sort((a, b) => this.sortHandle(false, a.name.toUpperCase(), b.name.toUpperCase()));
 
       [...this.ul.childNodes]
-        .sort((a, b) => this.sortHandle('desc', a.querySelector('.name').innerText.toUpperCase(), b.querySelector('.name').innerText.toUpperCase()))
+        .sort((a, b) => this.sortHandle(false, a.querySelector('.name').innerText.toUpperCase(), b.querySelector('.name').innerText.toUpperCase()))
         .forEach(node => this.ul.appendChild(node));
 
       this.ul.classList.remove('asc');
       this.ul.classList.add('desc');
     } else {
-      this.songsObjList.sort((a, b) => this.sortHandle('asc', a.name.toUpperCase(), b.name.toUpperCase()));
+      this.songsObjList.sort((a, b) => this.sortHandle(true, a.name.toUpperCase(), b.name.toUpperCase()));
 
       [...this.ul.childNodes]
-        .sort((a, b) => this.sortHandle('asc', a.querySelector('.name').innerText.toUpperCase(), b.querySelector('.name').innerText.toUpperCase()))
+        .sort((a, b) => this.sortHandle(true, a.querySelector('.name').innerText.toUpperCase(), b.querySelector('.name').innerText.toUpperCase()))
         .forEach(node => this.ul.appendChild(node));
 
       this.ul.classList.remove('desc');
@@ -138,7 +137,8 @@ class PlayList {
   }
 
   _play(songs) {
-    if (songs.find(data => data.status === 'playing')) {
+    const playingSongs = songs.find(data => data.status === 'playing');
+    if (playingSongs) {
       return;
     }
 
@@ -156,7 +156,7 @@ class PlayList {
       const { id, name, length } = firstCheckedSong;
       this.player.playSong(id, name, length);
     } else {
-      if (songs.length === 0) return;
+      if (!songs.length) return;
       songs[0].setPlay();
       const { id, name, length } = songs[0];
       this.player.playSong(id, name, length);
@@ -173,13 +173,11 @@ class PlayList {
       const findPlayingSongs = this.player[this.player.currentPlayarea].playList.songsObjList.find(data => data.status === 'playing' || data.status === 'pause');
       if (findPlayingSongs) {
         // if have playing song, play old play area's song.
-
         this._play(
           this.player[this.player.currentPlayarea].playList.songsObjList
         );
       } else {
         // if not have playing song, play new switch list song.
-
         this.player.currentPlayarea = selector(
           '.musiclist>div:not(.hide)'
         ).classList[0];
@@ -219,7 +217,7 @@ class PlayList {
       prevIdx = this.songsObjList.length - 1;
     }
 
-    if (this.songsObjList.length === 0) return;
+    if (!this.songsObjList.length) return;
     this.songsObjList[prevIdx].setPlay();
     const { id, name, length } = this.songsObjList[prevIdx];
     this.player.playSong(id, name, length);
@@ -239,7 +237,7 @@ class PlayList {
     } else {
       nextIdx = 0;
     }
-    if (this.songsObjList.length === 0) return;
+    if (!this.songsObjList.length) return;
     this.songsObjList[nextIdx].setPlay();
     const { id, name, length } = this.songsObjList[nextIdx];
     this.player.playSong(id, name, length);
@@ -247,146 +245,7 @@ class PlayList {
 
   addPlayList() {
     const songs = this.songsObjList.filter(data => data.selected === true);
-    if (songs.length) {
-      const currentPlayAreaCount = ++this.player.currentIdx;
-      const newSongs = songs.map(data => {
-        const { id, name, length } = data;
-        return { id, name, length };
-      });
-      this.player['default' + currentPlayAreaCount] = new PlayArea({
-        player: this.player,
-        AUDIOS: newSongs,
-        isDefault: false,
-        index: currentPlayAreaCount,
-      });
-      selector('.musiclist').appendChild(
-        this.player['default' + currentPlayAreaCount].getEl()
-      );
-      const newBtn = createEl('button', ['default' + currentPlayAreaCount]);
-      newBtn.innerText = 'New List' + currentPlayAreaCount;
-
-      const btnDiv = createEl('div');
-      btnDiv.setAttribute('draggable', true);
-      btnDiv.appendChild(newBtn);
-
-      const span = createEl('span', ['hide']);
-      const input = createEl('input', [], 'text');
-
-      span.appendChild(input);
-      btnDiv.appendChild(span);
-
-      newBtn.addEventListener('dblclick', () => {
-        span.classList.remove('hide');
-        input.focus();
-      });
-
-      input.addEventListener('blur', () => {
-        span.classList.add('hide');
-        input.value = '';
-      });
-
-      input.addEventListener('keypress', e => {
-        const key = e.which || e.keyCode;
-        if (key === 13) {
-          let isHasSameName = false;
-          Array.prototype.find.call(
-            selectorAll('.playlist .list button'),
-            data => {
-              if (data.innerText === input.value.trim()) {
-                isHasSameName = true;
-              }
-            }
-          );
-          if (isHasSameName) {
-            alert('There is a same name play list!');
-            input.value = '';
-          } else {
-            newBtn.innerText = input.value.trim();
-            input.blur();
-            input.value = '';
-          }
-        }
-      });
-
-      selector('.playlist .list').appendChild(btnDiv);
-      // https://www.html5rocks.com/en/tutorials/dnd/basics/
-      const handleDragStart = e => {
-        btnDiv.setAttribute('dragFrom', true);
-        e.dataTransfer.setData('tag', 'button');
-        e.dataTransfer.effectAllowed = 'move';
-      };
-
-      const handleDragEnter = e => {
-        btnDiv.classList.add('over');
-      };
-
-      const handleDragLeave = e => {
-        btnDiv.classList.remove('over');
-      };
-
-      const handleDragOver = e => {
-        if (e.preventDefault) {
-          e.preventDefault(); // Necessary. Allows us to drop.
-        }
-
-        e.dataTransfer.dropEffect = 'move'; // See the section on the DataTransfer object.
-        return false;
-      };
-
-      const handleDrop = e => {
-        if (!e.dataTransfer.getData('tag')) {
-          this.clearDragClass('over');
-          return;
-        }
-        if (e.stopPropagation) {
-          e.stopPropagation(); // Stops some browsers from redirecting.
-        }
-        btnDiv.setAttribute('dragTo', true);
-
-        const idxFrom = this.getDragIdx('dragFrom');
-        const idxTo = this.getDragIdx('dragTo');
-
-        if (idxFrom !== idxTo) {
-          this.swapNodes(this.getDragBtn(idxFrom), this.getDragBtn(idxTo));
-        }
-      };
-
-      const handleDragEnd = () => {
-        this.clearDragClass('over');
-        this.clearDragAttribute();
-      };
-      btnDiv.addEventListener('dragstart', handleDragStart, false);
-      btnDiv.addEventListener('dragenter', handleDragEnter, false);
-      btnDiv.addEventListener('dragover', handleDragOver, false);
-      btnDiv.addEventListener('dragleave', handleDragLeave, false);
-      btnDiv.addEventListener('drop', handleDrop, false);
-      btnDiv.addEventListener('dragend', handleDragEnd, false);
-    } else {
-      alert('Please select which you like song.');
-    }
-  }
-  clearDragAttribute() {
-    Array.prototype.forEach.call(selectorAll('.playlist .list>div'), data => {
-      data.removeAttribute('dragFrom');
-      data.removeAttribute('dragTo');
-    });
-  }
-  clearDragClass(cls) {
-    Array.prototype.forEach.call(selectorAll('.playlist .list>div'), data =>
-      data.classList.remove(cls)
-    );
-  }
-  getDragBtn(idx) {
-    return selectorAll('.playlist .list>div')[idx];
-  }
-  getDragIdx(attr) {
-    return Array.prototype.findIndex.call(selectorAll('.playlist .list>div'), data => data.getAttribute(attr));
-  }
-  swapNodes(a, b) {
-    const aparent = a.parentNode;
-    const asibling = a.nextSibling === b ? a : a.nextSibling;
-    b.parentNode.insertBefore(a, b);
-    aparent.insertBefore(b, asibling);
+    new PlayListBtns(songs, this.player).init();
   }
 
   getEl() {

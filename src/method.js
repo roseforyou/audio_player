@@ -28,4 +28,11 @@ function selectorAll(key) {
   return document.querySelectorAll(key);
 }
 
-export { shuffleArray, createEl, addZero, selector, selectorAll };
+function swapNodes(a, b) {
+  const aparent = a.parentNode;
+  const asibling = a.nextSibling === b ? a : a.nextSibling;
+  b.parentNode.insertBefore(a, b);
+  aparent.insertBefore(b, asibling);
+}
+
+export { shuffleArray, createEl, addZero, selector, selectorAll, swapNodes };
