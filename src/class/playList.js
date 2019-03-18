@@ -1,6 +1,7 @@
-import { createEl, selector, swapNodes } from '../method';
+import { createEl, selector, swapNodes, getActiveListBtn } from '../method';
 import PlayListBtns from './playListBtns';
 import Song from './song';
+import { STATUS } from '../data';
 
 class PlayList {
   constructor(player, songsList) {
@@ -22,7 +23,7 @@ class PlayList {
   }
 
   playSong(id, name, length) {
-    const s = this.songsObjList.find(data => data.status === 'playing');
+    const s = this.songsObjList.find(data => data.status === STATUS.PLAYING);
     if (s) {
       s.setStop();
     }
@@ -33,23 +34,6 @@ class PlayList {
     this.player.playSong(id, name, length);
   }
 
-  // moveChildNode(newChildIdx, oldChildIdx) {
-  //   const ul = this.ul;
-  //   ul.insertBefore(
-  //     ul.childNodes[newChildIdx],
-  //     ul.childNodes[oldChildIdx]
-  //   );
-  //   // only for two nodes of params position switch, other nodes position not change.
-  //   if (newChildIdx === this.songsObjList.length - 1) {
-  //     ul.appendChild(ul.childNodes[oldChildIdx + 1]);
-  //   } else {
-  //     ul.insertBefore(
-  //       ul.childNodes[oldChildIdx + 1],
-  //       ul.childNodes[newChildIdx + 1]
-  //     );
-  //   }
-  // }
-
   random() {
     this.ul.classList.remove('asc');
     this.ul.classList.remove('desc');
@@ -59,39 +43,9 @@ class PlayList {
       this.songsObjList[i] = this.songsObjList[j];
       this.songsObjList[j] = temp;
 
-      // this method is not useful
-      // let ctempi = this.ul.childNodes[i].cloneNode(true);
-      // let ctempj = this.ul.childNodes[j].cloneNode(true);
-      // this.ul.replaceChild(ctempj, this.ul.childNodes[i]);
-      // this.ul.replaceChild(ctempi, this.ul.childNodes[j]);
-
-      // if (i < j) {
-      //   this.moveChildNode(j, i);
-      // } else if (i > j) {
-      //   this.moveChildNode(i, j);
-      // }
       if (i !== j) swapNodes(this.ul.childNodes[i], this.ul.childNodes[j]);
     }
   }
-
-  // sortHandle(sort, nameA, nameB) {
-  //   if (sort === 'asc') {
-  //     if (nameA < nameB) {
-  //       return -1;
-  //     }
-  //     if (nameA > nameB) {
-  //       return 1;
-  //     }
-  //   } else {
-  //     if (nameA > nameB) {
-  //       return -1;
-  //     }
-  //     if (nameA < nameB) {
-  //       return 1;
-  //     }
-  //   }
-  //   return 0;
-  // }
 
   sortHandle(isAsc, nameA, nameB) {
     return isAsc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
@@ -102,7 +56,7 @@ class PlayList {
       this.songsObjList.sort((a, b) => this.sortHandle(false, a.name.toUpperCase(), b.name.toUpperCase()));
 
       [...this.ul.childNodes]
-        .sort((a, b) => this.sortHandle(false, a.querySelector('.name').innerText.toUpperCase(), b.querySelector('.name').innerText.toUpperCase()))
+        .sort((a, b) => this.sortHandle(false, selector('.name', a).innerText.toUpperCase(), selector('.name', b).innerText.toUpperCase()))
         .forEach(node => this.ul.appendChild(node));
 
       this.ul.classList.remove('asc');
@@ -111,7 +65,7 @@ class PlayList {
       this.songsObjList.sort((a, b) => this.sortHandle(true, a.name.toUpperCase(), b.name.toUpperCase()));
 
       [...this.ul.childNodes]
-        .sort((a, b) => this.sortHandle(true, a.querySelector('.name').innerText.toUpperCase(), b.querySelector('.name').innerText.toUpperCase()))
+        .sort((a, b) => this.sortHandle(true, selector('.name', a).innerText.toUpperCase(), selector('.name', b).innerText.toUpperCase()))
         .forEach(node => this.ul.appendChild(node));
 
       this.ul.classList.remove('desc');
@@ -123,7 +77,7 @@ class PlayList {
     if (!this.songsObjList.find(data => data.selected === true)) {
       alert('Please select which you want to delete!');
     } else {
-      if (selector('.musiclist>div:not(.hide)').classList.contains('default')) {
+      if (getActiveListBtn().classList.contains('default')) {
         this.player.loopAllPlayList(false);
       } else {
         const delSongName = this.songsObjList
@@ -137,12 +91,12 @@ class PlayList {
   }
 
   _play(songs) {
-    const playingSongs = songs.find(data => data.status === 'playing');
+    const playingSongs = songs.find(data => data.status === STATUS.PLAYING);
     if (playingSongs) {
       return;
     }
 
-    const pauseSong = songs.find(data => data.status === 'pause');
+    const pauseSong = songs.find(data => data.status === STATUS.PAUSE);
     if (pauseSong) {
       pauseSong.setPlay();
       this.player.playSong();
@@ -163,73 +117,66 @@ class PlayList {
     }
   }
 
-  play() {
-    const currrentPlayAreaName = selector('.musiclist>div:not(.hide)')
-      .classList[0];
-    if (currrentPlayAreaName === this.player.currentPlayarea) {
-      this._play(this.songsObjList);
-    } else {
-      // this.player.currentPlayarea under song is all 'stop' or 'ready' will play new switch list song.
-      const findPlayingSongs = this.player[this.player.currentPlayarea].playList.songsObjList.find(data => data.status === 'playing' || data.status === 'pause');
-      if (findPlayingSongs) {
-        // if have playing song, play old play area's song.
-        this._play(
-          this.player[this.player.currentPlayarea].playList.songsObjList
-        );
-      } else {
-        // if not have playing song, play new switch list song.
-        this.player.currentPlayarea = selector(
-          '.musiclist>div:not(.hide)'
-        ).classList[0];
-
-        this._play(
-          this.player[this.player.currentPlayarea].playList.songsObjList
-        );
-      }
+  setCurrentPlayArea() {
+    if (this.player.status === STATUS.STOP || this.player.status === STATUS.READY) {
+      this.player.currentPlayarea = getActiveListBtn().classList[0];
     }
   }
+
+  play() {
+    this.setCurrentPlayArea();
+    this._play(this.getCurrentPlayList());
+  }
+
   pause() {
-    const song = this.songsObjList.find(data => data.status === 'playing');
+    const song = this.songsObjList.find(data => data.status === STATUS.PLAYING);
     if (typeof song === 'undefined') return;
     song.setPause();
     this.player.pauseSong();
   }
+
   stop() {
-    const song = this.songsObjList.find(data => data.status === 'playing' || data.status === 'pause');
+    const song = this.songsObjList.find(data => data.status === STATUS.PLAYING || data.status === STATUS.PAUSE);
     if (song) {
       song.setStop();
       this.player.stopSong();
     }
   }
+
   prev() {
-    const idx = this.songsObjList.findIndex(data => data.status === 'playing' || data.status === 'pause');
+    this.setCurrentPlayArea();
+    const _songsList = this.getCurrentPlayList();
+    const idx = _songsList.findIndex(data => data.status === STATUS.PLAYING || data.status === STATUS.PAUSE);
     let prevIdx = 0;
     if (idx > -1) {
-      this.songsObjList[idx].setStop();
+      _songsList[idx].setStop();
       this.player.stopSong();
 
       if (idx === 0) {
-        prevIdx = this.songsObjList.length - 1;
+        prevIdx = _songsList.length - 1;
       } else {
         prevIdx = idx - 1;
       }
     } else {
-      prevIdx = this.songsObjList.length - 1;
+      prevIdx = _songsList.length - 1;
     }
 
-    if (!this.songsObjList.length) return;
-    this.songsObjList[prevIdx].setPlay();
-    const { id, name, length } = this.songsObjList[prevIdx];
+    if (!_songsList.length) return;
+    _songsList[prevIdx].setPlay();
+    const { id, name, length } = _songsList[prevIdx];
     this.player.playSong(id, name, length);
   }
+
   next() {
-    const idx = this.songsObjList.findIndex(data => data.status === 'playing' || data.status === 'pause');
+    this.setCurrentPlayArea();
+    const _songsList = this.getCurrentPlayList();
+    const idx = _songsList.findIndex(data => data.status === STATUS.PLAYING || data.status === STATUS.PAUSE);
     let nextIdx = 0;
     if (idx > -1) {
-      this.songsObjList[idx].setStop();
+      _songsList[idx].setStop();
       this.player.stopSong();
 
-      if (idx === this.songsObjList.length - 1) {
+      if (idx === _songsList.length - 1) {
         nextIdx = 0;
       } else {
         nextIdx = idx + 1;
@@ -237,10 +184,14 @@ class PlayList {
     } else {
       nextIdx = 0;
     }
-    if (!this.songsObjList.length) return;
-    this.songsObjList[nextIdx].setPlay();
-    const { id, name, length } = this.songsObjList[nextIdx];
+    if (!_songsList.length) return;
+    _songsList[nextIdx].setPlay();
+    const { id, name, length } = _songsList[nextIdx];
     this.player.playSong(id, name, length);
+  }
+
+  getCurrentPlayList() {
+    return this.player[this.player.currentPlayarea].playList.songsObjList;
   }
 
   addPlayList() {

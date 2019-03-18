@@ -2,8 +2,8 @@ import { createEl } from '../method';
 import { STATUS } from '../data';
 
 class PlayButtons {
-  constructor(playarea) {
-    Object.assign(this, { playarea });
+  constructor(player) {
+    Object.assign(this, { player });
 
     this.prevBtn = this._createBtn('Prev');
     this.playBtn = this._createBtn('Play');
@@ -17,19 +17,17 @@ class PlayButtons {
       this.stopBtn,
       this.nextBtn,
     );
-
-    this.status = STATUS.READY;
   }
 
   _createBtn(name) {
     const btn = createEl('button');
     btn.innerText = name;
     btn.addEventListener('click', () => {
-      const playList = this.playarea[this.playarea.currentPlayarea].playList;
+      const playList = this.player[this.player.currentPlayarea].playList;
       if (name === 'Prev') {
         playList.prev();
       } else if (name === 'Play') {
-        if (this.status === STATUS.PLAYING) {
+        if (this.player.status === STATUS.PLAYING) {
           playList.pause();
         } else {
           playList.play();
@@ -44,18 +42,13 @@ class PlayButtons {
   }
 
   setPlayTxt() {
-    if (this.status === STATUS.PLAYING) {
+    if (this.player.status === STATUS.PLAYING) {
       this.playBtn.innerText = 'Pause';
       this.playBtn.classList.add('on');
-    } else if (this.status === STATUS.PAUSE || this.status === STATUS.STOP) {
+    } else if (this.player.status === STATUS.PAUSE || this.player.status === STATUS.STOP) {
       this.playBtn.innerText = 'Play';
       this.playBtn.classList.remove('on');
     }
-  }
-
-  setPlayStatus(status) {
-    this.status = status;
-    this.setPlayTxt();
   }
 
   getEl() {

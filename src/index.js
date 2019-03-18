@@ -1,5 +1,5 @@
-import { selector, selectorAll } from './method';
-import { AUDIOS, EVENT } from './data';
+import { selector, selectorAll, getActiveListBtn } from './method';
+import { AUDIOS, EVENT, STATUS } from './data';
 import Title from './class/title';
 import Bar from './class/bar';
 import PlayButtons from './class/playButtons';
@@ -17,6 +17,12 @@ class Player {
   }
 
   init() {
+    this.timer = 0;
+    this.interval = 50;
+    this.songCurrentSeconds = 0;
+    this.songTotalSeconds = 0;
+
+    this.status = STATUS.READY;
     this.playButtons = new PlayButtons(this);
     this.title = new Title(this);
     this.bar = new Bar();
@@ -31,105 +37,75 @@ class Player {
     this[this.currentPlayarea].show();
     this.container.style.display = 'block';
 
-    selector('.playlist .list').addEventListener('click', e => {
-      const currentEl = e.target;
-      if (currentEl.nodeName === 'BUTTON') {
-        if (currentEl.classList.contains('on')) {
-
-        } else {
-          const onBtn = selector('.playlist .list button.on');
-          if (onBtn) {
-            onBtn.classList.remove('on');
-            selector('.musiclist>div:not(.hide)').classList.add('hide');
-          }
-          currentEl.classList.add('on');
-
-          selector('.musiclist>.' + currentEl.classList[0]).classList.remove(
-            'hide'
-          );
-
-          if (currentEl.classList[0] === 'default') {
-            selector('.playlist .op').classList.add('hide');
-          } else {
-            selector('.playlist .op').classList.remove('hide');
-          }
-        }
-      }
-    });
-
-    selector('.playlist .op').addEventListener('click', e => {
-      const currentEl = e.target;
-      if (currentEl.nodeName === 'BUTTON') {
-        if (confirm('Are you sure delete current play list?!')) {
-          selector('.musiclist >div:not(.hide)').remove();
-          this.currentPlayarea = 'default';
-          const btn = selector('.playlist .list button.on');
-          this[btn.classList[0]].playList.stop();
-          delete this[btn.classList[0]];
-          btn.parentNode.remove();
-
-          selector('.playlist .list .default').click();
-        }
-      }
-    });
-
-    window.onkeyup = e => {
-      const key = e.which || e.keyCode;
-      if (key === EVENT.Space) {
-        selectorAll('.container>.buttons button')[1].click();
-      }
-      if (key === EVENT.ArrowUp) {
-        this[this.currentPlayarea].playList.prev();
-      }
-      if (key === EVENT.ArrowDown) {
-        this[this.currentPlayarea].playList.next();
-      }
-    };
+    this.playListBtnEvent();
+    this.playListDelEvent();
+    this.keyboardEvent();
   }
 
-  playSong(id, name, length) {
+  playSong(id, name, seconds) {
+    this.songCurrentSeconds = seconds;
+    this.songTotalSeconds = seconds;
+
     if (name) {
       this.title.setName(name);
     }
-    if (length) {
-      this.title.setLength(length);
+    if (seconds) {
+      this.title.setTime(seconds);
     }
-    this.title.play();
+    this.title.addAnimate();
 
-    if (length) {
-      this.bar.setLength(length);
+    if (seconds) {
+      this.bar.fullSize();
     }
-    this.bar.play();
-    this.playButtons.setPlayStatus('playing');
+
+    let titleTrigger = 0;
+    this.timer = setInterval(() => {
+      if (this.songCurrentSeconds <= 0) {
+        clearInterval(this.timer);
+        return;
+      }
+      this.songCurrentSeconds = this.songCurrentSeconds - this.interval / 1000;
+      this.bar.setLength(this.songCurrentSeconds, this.songTotalSeconds);
+      if (titleTrigger > 0 && titleTrigger % 1000 === 0) {
+        this.title.setTime(--seconds);
+      }
+      titleTrigger += this.interval;
+    }, this.interval);
+
+    this.status = STATUS.PLAYING;
+    this.playButtons.setPlayTxt();
   }
 
   stopSong() {
-    this.title.setLength(0);
-    this.title.stop();
+    clearInterval(this.timer);
+    this.songCurrentSeconds = 0;
+    this.bar.zeroSize();
 
-    this.bar.stop();
-    this.playButtons.setPlayStatus('stop');
+    this.title.setTime(0);
+    this.title.removeAnimate();
+
+    this.status = STATUS.STOP;
+    this.playButtons.setPlayTxt();
   }
 
   pauseSong() {
-    this.title.pause();
-    this.bar.pause();
-    this.playButtons.setPlayStatus('pause');
+    clearInterval(this.timer);
+    this.title.removeAnimate();
+
+    this.status = STATUS.PAUSE;
+    this.playButtons.setPlayTxt();
   }
 
   delSelectedSongs(list, delArr) {
     list.songsObjList.forEach(data => {
-      if (
-        (data.status === 'playing' || data.status === 'pause') &&
-        new Set(delArr).has(data.name)
-      ) {
+      if ((data.status === STATUS.PLAYING || data.status === STATUS.PAUSE) && new Set(delArr).has(data.name)) {
         this.stopSong();
         data.setStop();
       }
     });
 
-    list.ul.querySelectorAll('li').forEach(data => {
-      if (delArr.includes(data.querySelector('.name').innerText)) {
+    selectorAll('li', list.ul).forEach(data => {
+      if (delArr.includes(selector('.name', data).innerText)) {
         data.remove();
       }
     });
@@ -179,6 +155,67 @@ class Player {
         this.loopAllPlayList(true);
       }
     }
+  }
+
+  playListBtnEvent() {
+    selector('.playlist .list').addEventListener('click', e => {
+      const currentEl = e.target;
+      if (currentEl.nodeName === 'BUTTON') {
+        if (currentEl.classList.contains('on')) {
+
+        } else {
+          const onBtn = selector('.playlist .list button.on');
+          if (onBtn) {
+            onBtn.classList.remove('on');
+            getActiveListBtn().classList.add('hide');
+          }
+          currentEl.classList.add('on');
+
+          selector('.musiclist>.' + currentEl.classList[0]).classList.remove(
+            'hide'
+          );
+
+          if (currentEl.classList[0] === 'default') {
+            selector('.playlist .op').classList.add('hide');
+          } else {
+            selector('.playlist .op').classList.remove('hide');
+          }
+        }
+      }
+    });
+  }
+
+  playListDelEvent() {
+    selector('.playlist .op').addEventListener('click', e => {
+      const currentEl = e.target;
+      if (currentEl.nodeName === 'BUTTON') {
+        if (confirm('Are you sure delete current play list?!')) {
+          getActiveListBtn().remove();
+          this.currentPlayarea = 'default';
+          const btn = selector('.playlist .list button.on');
+          this[btn.classList[0]].playList.stop();
+          delete this[btn.classList[0]];
+          btn.parentNode.remove();
+
+          selector('.playlist .list .default').click();
+        }
+      }
+    });
+  }
+
+  keyboardEvent() {
+    window.onkeyup = e => {
+      const key = e.which || e.keyCode;
+      if (key === EVENT.Space) {
+        selectorAll('.container>.buttons button')[1].click();
+      }
+      if (key === EVENT.ArrowUp) {
+        this[this.currentPlayarea].playList.prev();
+      }
+      if (key === EVENT.ArrowDown) {
+        this[this.currentPlayarea].playList.next();
+      }
+    };
   }
 }
 new Player().init();

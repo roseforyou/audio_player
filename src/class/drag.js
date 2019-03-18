@@ -99,7 +99,7 @@ class Drag {
 
   clearDragClass(cls) {
     if (this.song) {
-      this.getCurrentPlayList().ul.querySelectorAll('li').forEach(data => data.classList.remove(cls));
+      selectorAll('li', this.getCurrentPlayList().ul).forEach(data => data.classList.remove(cls));
     } else {
       Array.from(selectorAll('.playlist .list>div')).forEach(data => data.classList.remove(cls));
     }
@@ -107,7 +107,7 @@ class Drag {
 
   getDragEl(idx) {
     if (this.song) {
-      return this.getCurrentPlayList().ul.querySelectorAll('li')[idx];
+      return selectorAll('li', this.getCurrentPlayList().ul)[idx];
     } else {
       return selectorAll('.playlist .list>div')[idx];
     }

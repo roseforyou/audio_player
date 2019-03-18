@@ -1,5 +1,6 @@
-import { createEl, addZero, selector } from '../method';
+import { createEl, addZero, getActiveListBtn } from '../method';
 import Drag from './drag';
+import { STATUS } from '../data';
 
 class Song {
   constructor(id, name, length, playListObj, player) {
@@ -7,97 +8,102 @@ class Song {
 
     this.selected = false;
 
-    this.status = 'ready'; // ready playing pause stop
+    this.status = STATUS.READY; // ready playing pause stop
 
-    this.li = createEl('li');
-    this.li.setAttribute('draggable', 'true');
-    this.cb = createEl('input', [], 'checkbox');
-    this.cb.addEventListener('click', () => {
+    this.songLi = createEl('li');
+    this.songLi.setAttribute('draggable', 'true');
+    this.songCheckbox = createEl('input', [], 'checkbox');
+    this.songCheckbox.addEventListener('click', () => {
       if (this.selected) {
         this.selected = false;
-        this.li.classList.remove('on');
+        this.songLi.classList.remove('on');
       } else {
         this.selected = true;
-        this.li.classList.add('on');
+        this.songLi.classList.add('on');
       }
     });
 
-    this.span1 = createEl('span', ['cb']);
-    this.span1.appendChild(this.cb);
+    this.songCbxContainer = createEl('span', ['cb']);
+    this.songCbxContainer.appendChild(this.songCheckbox);
 
-    this.span2 = createEl('span', ['name']);
-    this.span2.innerText = this.name;
-    this.span2.addEventListener('click', () => {
-      if (this.selected) {
-        this.selected = false;
-        this.cb.checked = false;
-        this.li.classList.remove('on');
-      } else {
-        this.selected = true;
-        this.cb.checked = true;
-        this.li.classList.add('on');
-      }
+    this.sonsNameContainer = createEl('span', ['name']);
+    this.sonsNameContainer.innerText = this.name;
+    this.sonsNameContainer.addEventListener('click', () => {
+      this.clickSelectEvent();
     });
 
-    this.span2.addEventListener('dblclick', () => {
-      if (this.status === 'playing') return;
-      this.playListObj.playSong(this.id, this.name, this.length);
-      if (!this.selected) {
-        this.selected = true;
-        this.cb.checked = true;
-        this.li.classList.add('on');
-      }
-
-      const currrentPlayAreaName = selector('.musiclist>div:not(.hide)')
-        .classList[0];
-      if (currrentPlayAreaName === this.player.currentPlayarea) return;
-      const s = this.player[this.player.currentPlayarea].playList.songsObjList.find(data => data.status === 'playing' || data.status === 'pause');
-      if (s) {
-        s.setStop();
-      }
-      this.player.currentPlayarea = selector(
-        '.musiclist>div:not(.hide)'
-      ).classList[0];
+    this.sonsNameContainer.addEventListener('dblclick', () => {
+      this.dblclickPlayEvent();
     });
 
-    this.span3 = createEl('span', ['time']);
-    this.span3.innerText = this.formatTime(this.length);
+    this.songTimeContainer = createEl('span', ['time']);
+    this.songTimeContainer.innerText = this.formatTime();
 
-    this.li.appendChild(this.span1);
-    this.li.appendChild(this.span2);
-    this.li.appendChild(this.span3);
-    new Drag(this.li, this, this.player).init();
+    this.songLi.appendChild(this.songCbxContainer);
+    this.songLi.appendChild(this.sonsNameContainer);
+    this.songLi.appendChild(this.songTimeContainer);
+    new Drag(this.songLi, this, this.player).init();
   }
 
-  formatTime(length) {
-    return addZero(Math.floor(length / 60)) + ':' + addZero(length % 60);
+  clickSelectEvent() {
+    if (this.selected) {
+      this.selected = false;
+      this.songCheckbox.checked = false;
+      this.songLi.classList.remove('on');
+    } else {
+      this.selected = true;
+      this.songCheckbox.checked = true;
+      this.songLi.classList.add('on');
+    }
+  }
+
+  dblclickPlayEvent() {
+    if (this.status === STATUS.PLAYING) return;
+    this.playListObj.playSong(this.id, this.name, this.length);
+    if (!this.selected) {
+      this.selected = true;
+      this.songCheckbox.checked = true;
+      this.songLi.classList.add('on');
+    }
+
+    const currrentPlayAreaName = getActiveListBtn().classList[0];
+    if (currrentPlayAreaName === this.player.currentPlayarea) return;
+    const s = this.player[this.player.currentPlayarea].playList.songsObjList.find(data => data.status === STATUS.PLAYING || data.status === STATUS.PAUSE);
+    if (s) {
+      s.setStop();
+    }
+    this.player.currentPlayarea = getActiveListBtn().classList[0];
+  }
+
+  formatTime() {
+    return addZero(Math.floor(this.length / 60)) + ':' + addZero(this.length % 60);
   }
 
   setPlay() {
-    if (this.status === 'playing') {
+    if (this.status === STATUS.PLAYING) {
       this.setPause();
       return;
     }
-    this.li.classList.add('playing');
-    this.status = 'playing';
+    this.songLi.classList.add(STATUS.PLAYING);
+    this.status = STATUS.PLAYING;
   }
 
   setStop() {
-    if (this.status === 'stop') return;
-    this.li.classList.remove('playing');
-    this.status = 'stop';
+    if (this.status === STATUS.STOP) return;
+    this.songLi.classList.remove(STATUS.PLAYING);
+    this.status = STATUS.STOP;
   }
 
   setPause() {
-    if (this.status === 'pause') {
+    if (this.status === STATUS.PAUSE) {
       this.setPlay();
       return;
     }
-    this.status = 'pause';
+    this.status = STATUS.PAUSE;
   }
 
   getEl() {
-    return this.li;
+    return this.songLi;
   }
 }
 export default Song;

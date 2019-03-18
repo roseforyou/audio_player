@@ -20,12 +20,20 @@ function addZero(str) {
   return str >= 10 ? str : '0' + str;
 }
 
-function selector(key) {
-  return document.querySelector(key);
+function selector(key, parentNode) {
+  if (parentNode) {
+    return parentNode.querySelector(key);
+  } else {
+    return document.querySelector(key);
+  }
 }
 
-function selectorAll(key) {
-  return document.querySelectorAll(key);
+function selectorAll(key, parentNode) {
+  if (parentNode) {
+    return parentNode.querySelectorAll(key);
+  } else {
+    return document.querySelectorAll(key);
+  }
 }
 
 function swapNodes(a, b) {
@@ -35,4 +43,8 @@ function swapNodes(a, b) {
   aparent.insertBefore(b, asibling);
 }
 
-export { shuffleArray, createEl, addZero, selector, selectorAll, swapNodes };
+function getActiveListBtn() {
+  return selector('.musiclist>div:not(.hide)');
+}
+
+export { shuffleArray, createEl, addZero, selector, selectorAll, swapNodes, getActiveListBtn };
