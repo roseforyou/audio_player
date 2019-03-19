@@ -19,9 +19,8 @@ class PlayListBtns {
   }
 
   _createPlayArea() {
-    ++this.player.currentIdx;
     const newSongs = this.songs.map(({ id, name, length }) => { return { id, name, length }; });
-    this.player['default' + this.player.currentIdx] = new PlayArea({
+    this.player['default' + (++this.player.currentIdx)] = new PlayArea({
       player: this.player,
       AUDIOS: newSongs,
       isDefault: false,
@@ -40,19 +39,19 @@ class PlayListBtns {
     btnContainer.setAttribute('draggable', true);
     btnContainer.appendChild(newBtn);
 
-    const span = createEl('span', ['hide']);
+    const inputContainer = createEl('span', ['hide']);
     const modifyInput = createEl('input', [], 'text');
 
-    span.appendChild(modifyInput);
-    btnContainer.appendChild(span);
+    inputContainer.appendChild(modifyInput);
+    btnContainer.appendChild(inputContainer);
 
     newBtn.addEventListener('dblclick', () => {
-      span.classList.remove('hide');
+      inputContainer.classList.remove('hide');
       modifyInput.focus();
     });
 
     modifyInput.addEventListener('blur', () => {
-      span.classList.add('hide');
+      inputContainer.classList.add('hide');
       modifyInput.value = '';
     });
 

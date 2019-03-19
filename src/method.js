@@ -1,11 +1,11 @@
 function shuffleArray(array) {
-  const newArrr = JSON.parse(JSON.stringify(array));
-  for (let i = newArrr.length - 1; i > 0; i--) {
+  const newArrr = [...array];
+  newArrr.forEach((v, i) => {
     const j = Math.floor(Math.random() * (i + 1));
     const temp = newArrr[i];
     newArrr[i] = newArrr[j];
     newArrr[j] = temp;
-  }
+  });
   return newArrr;
 }
 
@@ -47,4 +47,15 @@ function getActiveListBtn() {
   return selector('.musiclist>div:not(.hide)');
 }
 
-export { shuffleArray, createEl, addZero, selector, selectorAll, swapNodes, getActiveListBtn };
+function _getRandomNum(range) {
+  return Math.round(Math.random() * range * 10 + 10);
+}
+
+function shuffleAudios(audios) {
+  audios.forEach(data => {
+    Object.assign((data.length = _getRandomNum(6)), data);
+  });
+  return shuffleArray(audios);
+}
+
+export { shuffleArray, createEl, addZero, selector, selectorAll, swapNodes, getActiveListBtn, shuffleAudios };

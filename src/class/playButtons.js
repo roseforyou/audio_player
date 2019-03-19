@@ -23,29 +23,29 @@ class PlayButtons {
     const btn = createEl('button');
     btn.innerText = name;
     btn.addEventListener('click', () => {
-      const playList = this.player[this.player.currentPlayarea].playList;
       if (name === 'Prev') {
-        playList.prev();
+        this.player.prev();
       } else if (name === 'Play') {
         if (this.player.status === STATUS.PLAYING) {
-          playList.pause();
+          this.player.pause();
         } else {
-          playList.play();
+          this.player.play();
         }
       } else if (name === 'Stop') {
-        playList.stop();
+        this.player.stop();
       } else if (name === 'Next') {
-        playList.next();
+        this.player.next();
       }
     });
     return btn;
   }
 
   setPlayTxt() {
-    if (this.player.status === STATUS.PLAYING) {
+    const status = this.player.status;
+    if (status === STATUS.PLAYING) {
       this.playBtn.innerText = 'Pause';
       this.playBtn.classList.add('on');
-    } else if (this.player.status === STATUS.PAUSE || this.player.status === STATUS.STOP) {
+    } else if (status === STATUS.PAUSE || status === STATUS.STOP) {
       this.playBtn.innerText = 'Play';
       this.playBtn.classList.remove('on');
     }

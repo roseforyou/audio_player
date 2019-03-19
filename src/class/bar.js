@@ -2,6 +2,10 @@ import { createEl } from '../method';
 
 class Bar {
   constructor() {
+    this._init();
+  }
+
+  _init() {
     this.el = createEl('div', ['bar']);
     this.elInner = createEl('div', ['pb']);
     this.el.append(this.elInner);

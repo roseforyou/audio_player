@@ -5,7 +5,7 @@ class PlayArea {
   constructor({ player, AUDIOS, isDefault, index }) {
     Object.assign(this, { isDefault, index });
 
-    this.playList = new PlayList(player, AUDIOS);
+    this.playList = new PlayList(AUDIOS, player);
     this.playAreaDiv = createEl('div');
     this.btnsArea = createEl('div', ['buttons', 'listbuttons']);
 
@@ -15,7 +15,7 @@ class PlayArea {
   _init() {
     this._playAreaDivRander();
     this._createBtnsList();
-    this.hide();
+    if (!this.isDefault) this.hide();
   }
 
   _playAreaDivRander() {
