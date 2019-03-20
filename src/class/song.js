@@ -1,4 +1,4 @@
-import { createEl, addZero } from '../method';
+import { createEl, addLeadingZero } from '../method';
 import Drag from './drag';
 import { STATUS } from '../data';
 
@@ -81,7 +81,7 @@ class Song {
   }
 
   _formatTime() {
-    return addZero(Math.floor(this.seconds / 60)) + ':' + addZero(this.seconds % 60);
+    return addLeadingZero(Math.floor(this.seconds / 60)) + ':' + addLeadingZero(this.seconds % 60);
   }
 
   setPlay() {

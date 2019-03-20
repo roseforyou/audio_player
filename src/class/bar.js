@@ -12,15 +12,19 @@ class Bar {
   }
 
   setLength(currentSec, totalSec) {
-    this.elInner.style.width = ((100 * currentSec) / totalSec).toFixed(2) + '%';
+    this._setValue(((100 * currentSec) / totalSec).toFixed(2) + '%');
   }
 
   fullSize() {
-    this.elInner.style.width = '100%';
+    this._setValue('100%');
   }
 
   zeroSize() {
-    this.elInner.style.width = 0;
+    this._setValue(0);
+  }
+
+  _setValue(val) {
+    this.elInner.style.width = val;
   }
 
   getEl() {

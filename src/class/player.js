@@ -72,11 +72,10 @@ class Player {
   }
 
   _beforePlayHandle() {
-    const currentSongs = this[this.currentPlayarea].playList.songsObjList;
-    const playingSongs = currentSongs.find(data => data.status === STATUS.PLAYING);
-    if (playingSongs) {
+    if (this.status === STATUS.PLAYING) {
       return;
     }
+    const currentSongs = this[this.currentPlayarea].playList.songsObjList;
     const pauseSong = currentSongs.find(data => data.status === STATUS.PAUSE);
 
     if (pauseSong) {
@@ -231,9 +230,7 @@ class Player {
 
     list.songsObjList
       .filter(data => delArr.includes(data.name))
-      .forEach(data => {
-        list.songsObjList.splice(list.songsObjList.indexOf(data), 1);
-      });
+      .forEach(data => list.songsObjList.splice(list.songsObjList.indexOf(data), 1));
   }
 
   loopAllPlayList(isDelete) {
@@ -277,7 +274,7 @@ class Player {
   }
 
   _keyboardEvent() {
-    window.onkeyup = e => {
+    document.onkeyup = e => {
       const key = e.which || e.keyCode;
       if (key === EVENT.Space) {
         if (this.status === STATUS.PLAYING) {

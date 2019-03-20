@@ -1,9 +1,7 @@
-import { createEl, addZero } from '../method';
+import { createEl, addLeadingZero } from '../method';
 
 class Title {
   constructor() {
-    this.name = '';
-
     this._init();
   }
 
@@ -21,7 +19,7 @@ class Title {
   }
 
   _formatTime(seconds) {
-    return '-' + addZero(Math.floor(seconds / 60)) + ':' + addZero(seconds % 60);
+    return '-' + addLeadingZero(Math.floor(seconds / 60)) + ':' + addLeadingZero(seconds % 60);
   }
 
   setTime(seconds) {

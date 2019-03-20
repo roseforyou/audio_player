@@ -11,14 +11,14 @@ function shuffleArray(array) {
   return newArrr;
 }
 
-function createEl(label, cls, type) {
+function createEl(label, classArray, type) {
   const el = document.createElement(label);
-  if (cls && cls.length) el.classList.add(...cls);
+  if (classArray && classArray.length) el.classList.add(...classArray);
   if (type) el.type = type;
   return el;
 }
 
-function addZero(str) {
+function addLeadingZero(str) {
   return str >= 10 ? str : '0' + str;
 }
 
@@ -54,10 +54,8 @@ function _getRandomNum(range) {
 }
 
 function shuffleAudios() {
-  AUDIOS.forEach(data => {
-    data.seconds = _getRandomNum(6);
-  });
+  AUDIOS.forEach(data => (data.seconds = _getRandomNum(6)));
   return shuffleArray(AUDIOS);
 }
 
-export { shuffleArray, createEl, addZero, selector, selectorAll, swapNodes, getActiveListBtn, shuffleAudios };
+export { shuffleArray, createEl, addLeadingZero, selector, selectorAll, swapNodes, getActiveListBtn, shuffleAudios };
