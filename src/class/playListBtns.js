@@ -1,12 +1,14 @@
 
-import { createEl, selector, selectorAll } from '../method';
-import PlayArea from './playArea';
+import { createEl, selector, selectorAll, getActiveListBtn } from '../method';
 import Drag from './drag';
 import { EVENT } from '../data';
 
 class PlayListBtns {
-  constructor(songs, player) {
-    Object.assign(this, { songs, player });
+  constructor(songs, player, isDefault = false) {
+    Object.assign(this, { songs, player, isDefault });
+
+    this.musicList = selector('.musiclist');
+    this.btnList = selector('.playlist .list');
   }
 
   init() {
@@ -19,56 +21,117 @@ class PlayListBtns {
   }
 
   _createPlayArea() {
-    const newSongs = this.songs.map(({ id, name, length }) => { return { id, name, length }; });
-    this.player['default' + (++this.player.currentIdx)] = new PlayArea({
-      player: this.player,
-      AUDIOS: newSongs,
-      isDefault: false,
-      index: this.player.currentIdx,
-    });
-    selector('.musiclist').appendChild(
-      this.player['default' + this.player.currentIdx].getEl()
-    );
+    if (this.isDefault) {
+      this.player[this.player.currentPlayarea] = this.player.createPlayArea(this.songs, true);
+      this.musicList.appendChild(this.player[this.player.currentPlayarea].getEl());
+    } else {
+      ++this.player.currentIdx;
+      const newSongs = this.songs.map(({ name, seconds }) => ({ name, seconds }));
+      this.player['default' + this.player.currentIdx] = this.player.createPlayArea(newSongs);
+      this.musicList.appendChild(this.player['default' + this.player.currentIdx].getEl());
+    }
   }
 
   _createPlayListBtn() {
-    const newBtn = createEl('button', ['default' + this.player.currentIdx]);
-    newBtn.innerText = 'New List' + this.player.currentIdx;
+    if (this.isDefault) {
+      this.newBtn = createEl('button', ['default', 'on']);
+      this.newBtn.innerText = 'Music List';
 
-    const btnContainer = createEl('div');
-    btnContainer.setAttribute('draggable', true);
-    btnContainer.appendChild(newBtn);
+      this.btnContainer = createEl('div');
+      this.btnContainer.appendChild(this.newBtn);
+      this.btnList.appendChild(this.btnContainer);
 
-    const inputContainer = createEl('span', ['hide']);
-    const modifyInput = createEl('input', [], 'text');
+      this.delBtn = createEl('button');
+      this.delBtn.innerText = 'Delete';
+      this.delBtn.addEventListener('click', () => {
+        this._delPlayList();
+      });
 
-    inputContainer.appendChild(modifyInput);
-    btnContainer.appendChild(inputContainer);
+      this.delContainer = createEl('div', ['op', 'hide']);
+      this.delContainer.appendChild(this.delBtn);
+      selector('.playlist').appendChild(this.delContainer);
+    } else {
+      this.newBtn = createEl('button', ['default' + this.player.currentIdx]);
+      this.newBtn.innerText = 'New List' + this.player.currentIdx;
 
-    newBtn.addEventListener('dblclick', () => {
-      inputContainer.classList.remove('hide');
-      modifyInput.focus();
+      this.btnContainer = createEl('div');
+      this.btnContainer.setAttribute('draggable', true);
+      this.btnContainer.appendChild(this.newBtn);
+
+      this.inputContainer = createEl('span', ['hide']);
+      this.modifyInput = createEl('input', [], 'text');
+
+      this.inputContainer.appendChild(this.modifyInput);
+      this.btnContainer.appendChild(this.inputContainer);
+
+      this.newBtn.addEventListener('dblclick', () => {
+        this._dblclickChangeName();
+      });
+
+      this.modifyInput.addEventListener('blur', () => {
+        this._cancelInput();
+      });
+
+      this.modifyInput.addEventListener('keypress', e => {
+        this._changePlayListBtnName(e);
+      });
+
+      this.btnList.appendChild(this.btnContainer);
+      new Drag(this.btnContainer).init();
+    }
+
+    this.newBtn.addEventListener('click', () => {
+      this._switchPlayArea();
     });
-
-    modifyInput.addEventListener('blur', () => {
-      inputContainer.classList.add('hide');
-      modifyInput.value = '';
-    });
-
-    modifyInput.addEventListener('keypress', e => {
-      this._changePlayListBtnName(newBtn, e);
-    });
-
-    selector('.playlist .list').appendChild(btnContainer);
-    new Drag(btnContainer).init();
   }
 
-  _changePlayListBtnName(newBtn, e) {
+  _delPlayList() {
+    if (confirm('Are you sure delete current play list?!')) {
+      getActiveListBtn().remove();
+      this.player.stop();
+      this.currentPlayarea = 'default';
+      const btn = selector('.playlist .list button.on');
+      delete this[btn.classList[0]];
+      btn.parentNode.remove();
+
+      selector('.playlist .list .default').click();
+    }
+  }
+
+  _switchPlayArea() {
+    if (!this.newBtn.classList.contains('on')) {
+      const onBtn = selector('.playlist .list button.on');
+      if (onBtn) {
+        onBtn.classList.remove('on');
+        getActiveListBtn().classList.add('hide');
+      }
+
+      this.newBtn.classList.add('on');
+      selector('.musiclist>.' + this.newBtn.classList[0]).classList.remove('hide');
+
+      if (this.newBtn.classList[0] === 'default') {
+        selector('.playlist .op').classList.add('hide');
+      } else {
+        selector('.playlist .op').classList.remove('hide');
+      }
+    }
+  }
+
+  _cancelInput() {
+    this.inputContainer.classList.add('hide');
+    this.modifyInput.value = '';
+  }
+
+  _dblclickChangeName() {
+    this.inputContainer.classList.remove('hide');
+    this.modifyInput.focus();
+  }
+
+  _changePlayListBtnName(e) {
     const key = e.which || e.keyCode;
     if (key === EVENT.Enter) {
       let isHasSameName = false;
-      const modifyInput = e.target;
-      const newPlayListName = modifyInput.value.trim();
+      const newPlayListName = this.modifyInput.value.trim();
       Array.from(selectorAll('.playlist .list button')).find(data => {
         if (data.innerText === newPlayListName) {
           isHasSameName = true;
@@ -76,13 +139,13 @@ class PlayListBtns {
       });
       if (isHasSameName) {
         alert('There is a same name play list!');
-        modifyInput.value = '';
+        this.modifyInput.value = '';
       } else {
         if (newPlayListName) {
-          newBtn.innerText = newPlayListName;
+          this.newBtn.innerText = newPlayListName;
         }
-        modifyInput.blur();
-        modifyInput.value = '';
+        this.modifyInput.blur();
+        this.modifyInput.value = '';
       }
     }
   }

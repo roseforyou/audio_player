@@ -1,3 +1,5 @@
+import { AUDIOS } from './data';
+
 function shuffleArray(array) {
   const newArrr = [...array];
   newArrr.forEach((v, i) => {
@@ -51,11 +53,11 @@ function _getRandomNum(range) {
   return Math.round(Math.random() * range * 10 + 10);
 }
 
-function shuffleAudios(audios) {
-  audios.forEach(data => {
-    Object.assign((data.length = _getRandomNum(6)), data);
+function shuffleAudios() {
+  AUDIOS.forEach(data => {
+    data.seconds = _getRandomNum(6);
   });
-  return shuffleArray(audios);
+  return shuffleArray(AUDIOS);
 }
 
 export { shuffleArray, createEl, addZero, selector, selectorAll, swapNodes, getActiveListBtn, shuffleAudios };

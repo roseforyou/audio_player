@@ -2,19 +2,19 @@ import { createEl } from '../method';
 import PlayList from './playList';
 
 class PlayArea {
-  constructor({ player, AUDIOS, isDefault, index }) {
-    Object.assign(this, { isDefault, index });
-
-    this.playList = new PlayList(AUDIOS, player);
-    this.playAreaDiv = createEl('div');
-    this.btnsArea = createEl('div', ['buttons', 'listbuttons']);
+  constructor({ player, audios, isDefault = false }) {
+    Object.assign(this, { player, audios, isDefault });
 
     this._init();
   }
 
   _init() {
-    this._playAreaDivRander();
+    this.playList = new PlayList(this.audios, this.player);
+    this.btnsArea = createEl('div', ['buttons', 'listbuttons']);
+    this.playAreaDiv = createEl('div');
+
     this._createBtnsList();
+    this._playAreaDivRander();
     if (!this.isDefault) this.hide();
   }
 
@@ -22,7 +22,7 @@ class PlayArea {
     if (this.isDefault) {
       this.playAreaDiv.classList.add('default');
     } else {
-      this.playAreaDiv.classList.add('default' + this.index);
+      this.playAreaDiv.classList.add('default' + this.player.currentIdx);
     }
 
     this.playAreaDiv.appendChild(this.btnsArea);

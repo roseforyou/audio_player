@@ -10,8 +10,8 @@ class PlayList {
   }
 
   _createSongsList() {
-    this.songsObjList = this.sl.map(({ id, name, length }) => {
-      const song = new Song(id, name, length, this.player);
+    this.songsObjList = this.sl.map(({ name, seconds }) => {
+      const song = new Song(name, seconds, this.player);
       this.ul.appendChild(song.getEl());
       return song;
     });
@@ -19,7 +19,7 @@ class PlayList {
 
   addPlayList() {
     const songs = this.songsObjList.filter(data => data.selected === true);
-    new PlayListBtns(songs, this.player).init();
+    new PlayListBtns(songs, this.player, false).init();
   }
 
   random() {
@@ -77,10 +77,6 @@ class PlayList {
         }
       }
     }
-  }
-
-  getCurrentPlayList() {
-    return this.player[this.player.currentPlayarea].playList.songsObjList;
   }
 
   getEl() {

@@ -5,6 +5,10 @@ class PlayButtons {
   constructor(player) {
     Object.assign(this, { player });
 
+    this._init();
+  }
+
+  _init() {
     this.prevBtn = this._createBtn('Prev');
     this.playBtn = this._createBtn('Play');
     this.stopBtn = this._createBtn('Stop');

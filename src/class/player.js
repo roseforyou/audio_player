@@ -1,9 +1,10 @@
 import { selector, selectorAll, getActiveListBtn, shuffleAudios } from '../method';
-import { AUDIOS, EVENT, STATUS } from '../data';
+import { EVENT, STATUS } from '../data';
 import Title from './title';
 import Bar from './bar';
 import PlayButtons from './playButtons';
 import PlayArea from './playArea';
+import PlayListBtns from './playListBtns';
 
 class Player {
   constructor() {
@@ -20,21 +21,32 @@ class Player {
   }
 
   init() {
-    this.playButtons = new PlayButtons(this);
-    this.title = new Title();
-    this.bar = new Bar();
+    this.playButtons = this._createPlayButton();
+    this.title = this._createTitle();
+    this.bar = this._createBar();
+    this._createPlayList();
+    this._keyboardEvent();
+    this.container.prepend(this.title.getEl(), this.playButtons.getEl(), this.bar.getEl());
+  }
 
-    this.container.prepend(this.playButtons.getEl());
-    this.container.prepend(this.bar.getEl());
-    this.container.prepend(this.title.getEl());
+  _createPlayButton() {
+    return new PlayButtons(this);
+  }
 
-    this[this.currentPlayarea] = new PlayArea({ player: this, AUDIOS: shuffleAudios(AUDIOS), isDefault: true });
-    selector('.musiclist').appendChild(this[this.currentPlayarea].getEl());
-    this.container.style.display = 'block';
+  _createTitle() {
+    return new Title();
+  }
 
-    this.playListBtnEvent();
-    this.playListDelEvent();
-    this.keyboardEvent();
+  _createBar() {
+    return new Bar();
+  }
+
+  _createPlayList() {
+    new PlayListBtns(shuffleAudios(), this, true).init();
+  }
+
+  createPlayArea(audios, isDefault) {
+    return new PlayArea({ player: this, audios, isDefault });
   }
 
   _timerHandle() {
@@ -53,7 +65,7 @@ class Player {
     }, this.interval);
   }
 
-  _setCurrentPlayArea() {
+  setCurrentPlayArea() {
     if (this.status === STATUS.STOP || this.status === STATUS.READY) {
       this.currentPlayarea = getActiveListBtn().classList[0];
     }
@@ -77,18 +89,18 @@ class Player {
 
     if (firstCheckedSong) {
       firstCheckedSong.setPlay();
-      const { id, name, length } = firstCheckedSong;
-      this.playSong(id, name, length);
+      const { name, seconds } = firstCheckedSong;
+      this.playSong(name, seconds);
     } else {
       if (!currentSongs.length) return;
       currentSongs[0].setPlay();
-      const { id, name, length } = currentSongs[0];
-      this.playSong(id, name, length);
+      const { name, seconds } = currentSongs[0];
+      this.playSong(name, seconds);
     }
   }
 
   play() {
-    this._setCurrentPlayArea();
+    this.setCurrentPlayArea();
     this._beforePlayHandle();
   }
 
@@ -111,7 +123,7 @@ class Player {
   }
 
   prev() {
-    this._setCurrentPlayArea();
+    this.setCurrentPlayArea();
     const currentSongs = this[this.currentPlayarea].playList.songsObjList;
     const idx = currentSongs.findIndex(data => data.status === STATUS.PLAYING || data.status === STATUS.PAUSE);
     let prevIdx = 0;
@@ -130,12 +142,12 @@ class Player {
 
     if (!currentSongs.length) return;
     currentSongs[prevIdx].setPlay();
-    const { id, name, length } = currentSongs[prevIdx];
-    this.playSong(id, name, length);
+    const { name, seconds } = currentSongs[prevIdx];
+    this.playSong(name, seconds);
   }
 
   next() {
-    this._setCurrentPlayArea();
+    this.setCurrentPlayArea();
     const currentSongs = this[this.currentPlayarea].playList.songsObjList;
     const idx = currentSongs.findIndex(data => data.status === STATUS.PLAYING || data.status === STATUS.PAUSE);
     let nextIdx = 0;
@@ -153,11 +165,11 @@ class Player {
     }
     if (!currentSongs.length) return;
     currentSongs[nextIdx].setPlay();
-    const { id, name, length } = currentSongs[nextIdx];
-    this.playSong(id, name, length);
+    const { name, seconds } = currentSongs[nextIdx];
+    this.playSong(name, seconds);
   }
 
-  playSong(id, name, seconds) {
+  playSong(name, seconds) {
     if (this.status !== STATUS.PAUSE) {
       this.songCurrentSeconds = seconds;
       this.songTotalSeconds = seconds;
@@ -264,53 +276,7 @@ class Player {
     }
   }
 
-  playListBtnEvent() {
-    selector('.playlist .list').addEventListener('click', e => {
-      const currentEl = e.target;
-      if (currentEl.nodeName === 'BUTTON') {
-        if (currentEl.classList.contains('on')) {
-
-        } else {
-          const onBtn = selector('.playlist .list button.on');
-          if (onBtn) {
-            onBtn.classList.remove('on');
-            getActiveListBtn().classList.add('hide');
-          }
-          currentEl.classList.add('on');
-
-          selector('.musiclist>.' + currentEl.classList[0]).classList.remove(
-            'hide'
-          );
-
-          if (currentEl.classList[0] === 'default') {
-            selector('.playlist .op').classList.add('hide');
-          } else {
-            selector('.playlist .op').classList.remove('hide');
-          }
-        }
-      }
-    });
-  }
-
-  playListDelEvent() {
-    selector('.playlist .op').addEventListener('click', e => {
-      const currentEl = e.target;
-      if (currentEl.nodeName === 'BUTTON') {
-        if (confirm('Are you sure delete current play list?!')) {
-          getActiveListBtn().remove();
-          this.currentPlayarea = 'default';
-          const btn = selector('.playlist .list button.on');
-          this[btn.classList[0]].playList.stop();
-          delete this[btn.classList[0]];
-          btn.parentNode.remove();
-
-          selector('.playlist .list .default').click();
-        }
-      }
-    });
-  }
-
-  keyboardEvent() {
+  _keyboardEvent() {
     window.onkeyup = e => {
       const key = e.which || e.keyCode;
       if (key === EVENT.Space) {

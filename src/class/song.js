@@ -3,8 +3,8 @@ import Drag from './drag';
 import { STATUS } from '../data';
 
 class Song {
-  constructor(id, name, length, player) {
-    Object.assign(this, { id, name, length, player });
+  constructor(name, seconds, player) {
+    Object.assign(this, { name, seconds, player });
 
     this.selected = false;
     this.status = STATUS.READY;
@@ -25,7 +25,7 @@ class Song {
     this.sonsNameContainer.innerText = this.name;
 
     this.songTimeContainer = createEl('span', ['time']);
-    this.songTimeContainer.innerText = this.formatTime();
+    this.songTimeContainer.innerText = this._formatTime();
 
     this.songLi.appendChild(this.songCbxContainer);
     this.songLi.appendChild(this.sonsNameContainer);
@@ -44,16 +44,16 @@ class Song {
     });
 
     this.sonsNameContainer.addEventListener('click', () => {
-      this.clickSelectEvent();
+      this._clickSelectEvent();
     });
     this.sonsNameContainer.addEventListener('dblclick', () => {
-      this.dblclickPlayEvent();
+      this._dblclickPlayEvent();
     });
 
     new Drag(this.songLi, this, this.player).init();
   }
 
-  clickSelectEvent() {
+  _clickSelectEvent() {
     if (this.selected) {
       this.selected = false;
       this.songCheckbox.checked = false;
@@ -65,7 +65,7 @@ class Song {
     }
   }
 
-  dblclickPlayEvent() {
+  _dblclickPlayEvent() {
     if (this.status === STATUS.PLAYING) return;
 
     if (!this.selected) {
@@ -75,12 +75,13 @@ class Song {
     }
 
     this.player.stop();
+    this.player.setCurrentPlayArea();
     this.setPlay();
-    this.player.playSong(this.id, this.name, this.length);
+    this.player.playSong(this.name, this.seconds);
   }
 
-  formatTime() {
-    return addZero(Math.floor(this.length / 60)) + ':' + addZero(this.length % 60);
+  _formatTime() {
+    return addZero(Math.floor(this.seconds / 60)) + ':' + addZero(this.seconds % 60);
   }
 
   setPlay() {
