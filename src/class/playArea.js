@@ -3,13 +3,13 @@ import PlayList from './playList';
 
 class PlayArea {
   constructor({ player, audios, isDefault = false }) {
-    Object.assign(this, { player, audios, isDefault });
+    Object.assign(this, { player, isDefault });
 
-    this._init();
+    this._init(audios);
   }
 
-  _init() {
-    this.playList = new PlayList(this.audios, this.player);
+  _init(audios) {
+    this.playList = new PlayList(audios, this.player);
     this.btnsArea = createEl('div', ['buttons', 'listbuttons']);
     this.playAreaDiv = createEl('div');
 
@@ -25,8 +25,7 @@ class PlayArea {
       this.playAreaDiv.classList.add('default' + this.player.currentIdx);
     }
 
-    this.playAreaDiv.appendChild(this.btnsArea);
-    this.playAreaDiv.appendChild(this.playList.getEl());
+    this.playAreaDiv.append(this.btnsArea, this.playList.getEl());
   }
 
   _createBtnsList() {
@@ -34,7 +33,7 @@ class PlayArea {
       this.addListBTN = this._createBtn('Add play list', () => {
         this.playList.addPlayList();
       });
-      this.btnsArea.append(this.addListBTN);
+      this.btnsArea.appendChild(this.addListBTN);
     }
 
     this.sortBTN = this._createBtn('Sort', () => {

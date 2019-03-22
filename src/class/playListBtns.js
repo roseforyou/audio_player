@@ -26,7 +26,7 @@ class PlayListBtns {
       this.musicList.appendChild(this.player[this.player.currentPlayarea].getEl());
     } else {
       ++this.player.currentIdx;
-      const newSongs = this.songs.map(({ name, seconds }) => ({ name, seconds }));
+      const newSongs = this.songs.map(({ id, name, seconds }) => ({ id, name, seconds }));
       this.player['default' + this.player.currentIdx] = this.player.createPlayArea(newSongs);
       this.musicList.appendChild(this.player['default' + this.player.currentIdx].getEl());
     }
@@ -109,10 +109,11 @@ class PlayListBtns {
       this.newBtn.classList.add('on');
       selector('.musiclist>.' + this.newBtn.classList[0]).classList.remove('hide');
 
+      const delArea = selector('.playlist .op');
       if (this.newBtn.classList[0] === 'default') {
-        selector('.playlist .op').classList.add('hide');
+        delArea.classList.add('hide');
       } else {
-        selector('.playlist .op').classList.remove('hide');
+        delArea.classList.remove('hide');
       }
     }
   }

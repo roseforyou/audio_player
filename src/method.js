@@ -54,7 +54,10 @@ function _getRandomNum(range) {
 }
 
 function shuffleAudios() {
-  AUDIOS.forEach(data => (data.seconds = _getRandomNum(6)));
+  AUDIOS.forEach((data, idx) => {
+    data.seconds = _getRandomNum(6);
+    data.id = idx + 1;
+  });
   return shuffleArray(AUDIOS);
 }
 

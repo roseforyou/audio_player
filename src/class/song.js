@@ -3,11 +3,10 @@ import Drag from './drag';
 import { STATUS } from '../data';
 
 class Song {
-  constructor(name, seconds, player) {
-    Object.assign(this, { name, seconds, player });
+  constructor(id, name, seconds, player) {
+    Object.assign(this, { id, name, seconds, player });
 
     this.selected = false;
-    this.status = STATUS.READY;
 
     this._init();
     this._bindEvent();
@@ -27,9 +26,7 @@ class Song {
     this.songTimeContainer = createEl('span', ['time']);
     this.songTimeContainer.innerText = this._formatTime();
 
-    this.songLi.appendChild(this.songCbxContainer);
-    this.songLi.appendChild(this.sonsNameContainer);
-    this.songLi.appendChild(this.songTimeContainer);
+    this.songLi.append(this.songCbxContainer, this.sonsNameContainer, this.songTimeContainer);
   }
 
   _bindEvent() {
@@ -66,7 +63,7 @@ class Song {
   }
 
   _dblclickPlayEvent() {
-    if (this.status === STATUS.PLAYING) return;
+    if (this.songLi.classList.contains('on')) return;
 
     if (!this.selected) {
       this.selected = true;
@@ -77,7 +74,7 @@ class Song {
     this.player.stop();
     this.player.setCurrentPlayArea();
     this.setPlay();
-    this.player.playSong(this.name, this.seconds);
+    this.player.playSong(this);
   }
 
   _formatTime() {
@@ -85,26 +82,11 @@ class Song {
   }
 
   setPlay() {
-    if (this.status === STATUS.PLAYING) {
-      this.setPause();
-      return;
-    }
     this.songLi.classList.add(STATUS.PLAYING);
-    this.status = STATUS.PLAYING;
   }
 
   setStop() {
-    if (this.status === STATUS.STOP) return;
     this.songLi.classList.remove(STATUS.PLAYING);
-    this.status = STATUS.STOP;
-  }
-
-  setPause() {
-    if (this.status === STATUS.PAUSE) {
-      this.setPlay();
-      return;
-    }
-    this.status = STATUS.PAUSE;
   }
 
   getEl() {

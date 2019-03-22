@@ -4,17 +4,21 @@ import Song from './song';
 
 class PlayList {
   constructor(songsList, player) {
-    Object.assign(this, { sl: [...songsList], ul: createEl('ul'), songsObjList: [], player });
+    Object.assign(this, { ul: createEl('ul'), songsObjList: [], player });
 
-    this._createSongsList();
+    this._createSongsList(songsList);
   }
 
-  _createSongsList() {
-    this.songsObjList = this.sl.map(({ name, seconds }) => {
-      const song = new Song(name, seconds, this.player);
-      this.ul.appendChild(song.getEl());
-      return song;
+  _createSongsList(songsList) {
+    this.songsObjList = songsList.map(({ id, name, seconds }) => {
+      return this._getSong(id, name, seconds);
     });
+  }
+
+  _getSong(id, name, seconds) {
+    const song = new Song(id, name, seconds, this.player);
+    this.ul.appendChild(song.getEl());
+    return song;
   }
 
   addPlayList() {
@@ -73,7 +77,7 @@ class PlayList {
           .filter(data => data.selected === true)
           .map(data => data.name);
         if (confirm(`Are you sure delete [${delSongName.join(',')}]?`)) {
-          this.player.delSelectedSongs(this, delSongName);
+          this.player.delSelectedSongs(getActiveListBtn().classList[0], delSongName);
         }
       }
     }

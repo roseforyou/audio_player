@@ -8,7 +8,7 @@ class Bar {
   _init() {
     this.el = createEl('div', ['bar']);
     this.elInner = createEl('div', ['pb']);
-    this.el.append(this.elInner);
+    this.el.appendChild(this.elInner);
   }
 
   setLength(currentSec, totalSec) {

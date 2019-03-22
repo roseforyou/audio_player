@@ -8,8 +8,9 @@ import PlayListBtns from './playListBtns';
 
 class Player {
   constructor() {
-    this.currentPlayarea = 'default';
     this.currentIdx = 0;
+    this.currentPlayarea = 'default';
+    this.currentSong = null;
     this.container = selector('.container');
 
     this.timer = 0;
@@ -75,26 +76,21 @@ class Player {
     if (this.status === STATUS.PLAYING) {
       return;
     }
-    const currentSongs = this[this.currentPlayarea].playList.songsObjList;
-    const pauseSong = currentSongs.find(data => data.status === STATUS.PAUSE);
 
-    if (pauseSong) {
-      pauseSong.setPlay();
+    if (this.status === STATUS.PAUSE) {
+      this.currentSong.setPlay();
       this.playSong();
       return;
     }
 
+    const currentSongs = this._getCurrentPlayAreaSongs();
     const firstCheckedSong = currentSongs.find(data => data.selected === true);
 
     if (firstCheckedSong) {
-      firstCheckedSong.setPlay();
-      const { name, seconds } = firstCheckedSong;
-      this.playSong(name, seconds);
+      this.playSong(firstCheckedSong);
     } else {
       if (!currentSongs.length) return;
-      currentSongs[0].setPlay();
-      const { name, seconds } = currentSongs[0];
-      this.playSong(name, seconds);
+      this.playSong(currentSongs[0]);
     }
   }
 
@@ -104,75 +100,64 @@ class Player {
   }
 
   pause() {
-    const currentSongs = this[this.currentPlayarea].playList.songsObjList;
-    const song = currentSongs.find(data => data.status === STATUS.PLAYING);
-    if (currentSongs) {
-      song.setPause();
-      this.pauseSong();
-    }
+    this.pauseSong();
   }
 
   stop() {
-    const currentSongs = this[this.currentPlayarea].playList.songsObjList;
-    const song = currentSongs.find(data => data.status === STATUS.PLAYING || data.status === STATUS.PAUSE);
-    if (song) {
-      song.setStop();
-      this.stopSong();
+    if (this.currentSong) {
+      this.currentSong.setStop();
     }
+    this.stopSong();
   }
 
   prev() {
     this.setCurrentPlayArea();
-    const currentSongs = this[this.currentPlayarea].playList.songsObjList;
-    const idx = currentSongs.findIndex(data => data.status === STATUS.PLAYING || data.status === STATUS.PAUSE);
-    let prevIdx = 0;
-    if (idx > -1) {
-      currentSongs[idx].setStop();
-      this.stopSong();
-
-      if (idx === 0) {
-        prevIdx = currentSongs.length - 1;
-      } else {
-        prevIdx = idx - 1;
-      }
-    } else {
-      prevIdx = currentSongs.length - 1;
-    }
-
+    const currentSongs = this._getCurrentPlayAreaSongs();
     if (!currentSongs.length) return;
-    currentSongs[prevIdx].setPlay();
-    const { name, seconds } = currentSongs[prevIdx];
-    this.playSong(name, seconds);
+
+    if (this.currentSong) {
+      let prevIdx = 0;
+      const idx = currentSongs.findIndex(data => data.id === this.currentSong.id);
+      if (idx) {
+        prevIdx = idx - 1;
+      } else {
+        prevIdx = currentSongs.length - 1;
+      }
+      this.stop();
+      this.playSong(currentSongs[prevIdx]);
+    } else {
+      this.playSong(currentSongs[currentSongs.length - 1]);
+    }
   }
 
   next() {
     this.setCurrentPlayArea();
-    const currentSongs = this[this.currentPlayarea].playList.songsObjList;
-    const idx = currentSongs.findIndex(data => data.status === STATUS.PLAYING || data.status === STATUS.PAUSE);
-    let nextIdx = 0;
-    if (idx > -1) {
-      currentSongs[idx].setStop();
-      this.stopSong();
+    const currentSongs = this._getCurrentPlayAreaSongs();
+    if (!currentSongs.length) return;
 
+    if (this.currentSong) {
+      let nextIdx = 0;
+      const idx = currentSongs.findIndex(data => data.id === this.currentSong.id);
       if (idx === currentSongs.length - 1) {
         nextIdx = 0;
       } else {
         nextIdx = idx + 1;
       }
+      this.stop();
+      this.playSong(currentSongs[nextIdx]);
     } else {
-      nextIdx = 0;
+      this.playSong(currentSongs[0]);
     }
-    if (!currentSongs.length) return;
-    currentSongs[nextIdx].setPlay();
-    const { name, seconds } = currentSongs[nextIdx];
-    this.playSong(name, seconds);
   }
 
-  playSong(name, seconds) {
+  playSong(song) {
+    const { name = '', seconds = 0 } = song;
     if (this.status !== STATUS.PAUSE) {
       this.songCurrentSeconds = seconds;
       this.songTotalSeconds = seconds;
       this.titleTriggerSecs = 0;
+      this.currentSong = song;
+      this.currentSong.setPlay();
     }
 
     if (name) {
@@ -202,6 +187,7 @@ class Player {
     this.title.setTime(0);
     this.title.removeAnimate();
 
+    this.currentSong = null;
     this.status = STATUS.STOP;
     this.playButtons.setPlayTxt();
   }
@@ -214,23 +200,22 @@ class Player {
     this.playButtons.setPlayTxt();
   }
 
-  delSelectedSongs(list, delArr) {
-    list.songsObjList.forEach(data => {
-      if ((data.status === STATUS.PLAYING || data.status === STATUS.PAUSE) && new Set(delArr).has(data.name)) {
-        this.stopSong();
-        data.setStop();
-      }
-    });
+  delSelectedSongs(playArea, delArr) {
+    const songs = this[playArea].playList.songsObjList;
 
-    selectorAll('li', list.ul).forEach(data => {
+    selectorAll('li', selector(playArea + '>ul')).forEach(data => {
       if (delArr.includes(selector('.name', data).innerText)) {
         data.remove();
       }
     });
 
-    list.songsObjList
-      .filter(data => delArr.includes(data.name))
-      .forEach(data => list.songsObjList.splice(list.songsObjList.indexOf(data), 1));
+    songs.filter(data => delArr.includes(data.name))
+      .forEach(data => {
+        if (this.currentPlayarea === playArea && (this.status === STATUS.PLAYING || this.status === STATUS.PAUSE) && new Set(delArr).has(this.currentSong.name)) {
+          this.stop();
+        }
+        songs.splice(songs.indexOf(data), 1);
+      });
   }
 
   loopAllPlayList(isDelete) {
@@ -242,12 +227,12 @@ class Player {
     if (isDelete) {
       for (const key of Object.keys(this)) {
         if (key.indexOf('default') > -1) {
-          this.delSelectedSongs(this[key].playList, delSongName);
+          this.delSelectedSongs(key, delSongName);
         }
       }
     } else {
       for (const key of Object.keys(this)) {
-        if (key.indexOf('default') > -1 && key.length > 'default'.length) {
+        if (/default\d+/.test(key)) {
           if (
             this[key].playList.songsObjList.find(data => {
               if (delSongName.includes(data.name)) {
@@ -262,9 +247,7 @@ class Player {
       let msg = `Are you sure delete [${delSongName.join(', ')}]?`;
       if (containedListName.length) {
         containedListName = containedListName.map(data => selector('.playlist .' + data).innerText);
-        msg += `\nPlay List: [${containedListName.join(
-          ', '
-        )}] also contains, will deleted!`;
+        msg += `\nPlay List: [${containedListName.join(', ')}] also contains, will deleted!`;
       }
 
       if (confirm(msg)) {
@@ -290,6 +273,10 @@ class Player {
         this.next();
       }
     };
+  }
+
+  _getCurrentPlayAreaSongs() {
+    return this[this.currentPlayarea].playList.songsObjList;
   }
 }
 
