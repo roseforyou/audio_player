@@ -100,7 +100,11 @@ class Player {
   }
 
   pause() {
-    this.pauseSong();
+    clearInterval(this.timer);
+    this.title.removeAnimate();
+
+    this.status = STATUS.PAUSE;
+    this.playButtons.setPlayTxt();
   }
 
   stop() {
@@ -150,7 +154,7 @@ class Player {
     }
   }
 
-  playSong(song) {
+  playSong(song = {}) {
     const { name = '', seconds = 0 } = song;
     if (this.status !== STATUS.PAUSE) {
       this.songCurrentSeconds = seconds;
@@ -189,14 +193,6 @@ class Player {
 
     this.currentSong = null;
     this.status = STATUS.STOP;
-    this.playButtons.setPlayTxt();
-  }
-
-  pauseSong() {
-    clearInterval(this.timer);
-    this.title.removeAnimate();
-
-    this.status = STATUS.PAUSE;
     this.playButtons.setPlayTxt();
   }
 
